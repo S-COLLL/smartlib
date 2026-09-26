@@ -10,6 +10,7 @@ const { runMaintenance } = require('./utils/library');
 function createApp() {
   const app = express();
   app.disable('x-powered-by');
+  app.set('trust proxy', 1); // behind Render / other reverse proxies
   app.use(cors({ origin: process.env.CLIENT_ORIGIN && process.env.CLIENT_ORIGIN !== '*' ? process.env.CLIENT_ORIGIN.split(',') : true }));
   app.use(express.json({ limit: '2mb' }));
 
@@ -53,6 +54,17 @@ async function start() {
     console.error('  Make sure MongoDB is running and MONGO_URI in .env is correct.');
     process.exit(1);
   }
+
+  // Hosted deployments (e.g. Render) have no shell to run `npm run seed`:
+  // with AUTO_SEED=true the demo data is loaded once, only if the database is empty.
+  if (process.env.AUTO_SEED === 'true') {
+    const User = require('./models/User');
+    if ((await User.estimatedDocumentCount()) === 0) {
+      console.log('Empty database — loading demo data (AUTO_SEED=true)…');
+      await require('./seed/seed').seedDatabase();
+    }
+  }
+
   const app = createApp();
   const port = Number(process.env.PORT) || 5000;
   app.listen(port, () => {

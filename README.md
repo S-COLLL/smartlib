@@ -155,7 +155,15 @@ npm run seed     # reset demo data (DELETES existing data)
 
 Health check: `GET http://localhost:5000/api/health`.
 
-## 10. Known limitations
+## 10. Deploying live (Render + MongoDB Atlas, free)
+
+1. **MongoDB Atlas**: create a free M0 cluster, add a database user, and under *Network Access* allow `0.0.0.0/0` (Render's free servers have changing IPs). Copy the connection string and add the database name: `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/smartlib?retryWrites=true&w=majority`.
+2. **Render**: *New → Blueprint*, connect this GitHub repo. `render.yaml` configures everything; paste the Atlas string when asked for `MONGO_URI`. `JWT_SECRET` is generated automatically.
+3. On first start, `AUTO_SEED=true` loads the demo data into the empty database. Later restarts keep your data.
+
+The free Render plan sleeps after 15 minutes without traffic, so the first request after that takes about 30–60 seconds. Every push to `main` redeploys automatically. The demo accounts are public on a live site, so change their passwords (Settings) or set `AUTO_SEED` to `false` and create your own users.
+
+## 11. Known limitations
 
 - **Payments are simulated.** No real gateway is contacted; UPI QR codes and card fields are for demonstration only.
 - **The AI assistant is rule-based** (regex and keyword parsing over MongoDB), not a large language model. It handles the documented question patterns well; free-form questions fall back to a keyword search.
