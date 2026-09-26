@@ -64,7 +64,49 @@ function qs(params) {
   return s ? `?${s}` : '';
 }
 
+/**
+ * Demo mode: the whole backend runs in the browser (js/demo/demo-api.js) with data in
+ * localStorage. On automatically for static hosting (GitHub Pages), or with ?demo=1.
+ * Leave it with ?demo=0.
+ */
+function detectDemo() {
+  try {
+    const flag = new URLSearchParams(location.search).get('demo');
+    if (flag === '1') localStorage.setItem('smartlib-demo', '1');
+    if (flag === '0') localStorage.removeItem('smartlib-demo');
+    return location.hostname.endsWith('github.io') || localStorage.getItem('smartlib-demo') === '1';
+  } catch {
+    return location.hostname.endsWith('github.io');
+  }
+}
+export const DEMO_MODE = detectDemo();
+let demoModule = null;
+
+function handleUnauthorized(status, path) {
+  if (status === 401 && !path.startsWith('/auth/login')) {
+    session.clear();
+    const here = location.pathname.split('/').pop() || 'index.html';
+    if (here !== 'index.html') location.href = `index.html?next=${encodeURIComponent(here + location.search)}&expired=1`;
+  }
+}
+
+async function demoCall(method, path, body, params) {
+  demoModule = demoModule || (await import('./demo/demo-api.js'));
+  try {
+    return await demoModule.demoRequest(method, path, { body, params, token: session.token });
+  } catch (e) {
+    if (!e.status) throw new ApiError(e.message || 'Demo error', 500);
+    handleUnauthorized(e.status, path);
+    throw new ApiError(e.message, e.status, e.details);
+  }
+}
+export async function resetDemoData() {
+  demoModule = demoModule || (await import('./demo/demo-api.js'));
+  demoModule.resetDemo();
+}
+
 async function request(method, path, { body, params } = {}) {
+  if (DEMO_MODE) return demoCall(method, path, body, params);
   const headers = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (session.token) headers.Authorization = `Bearer ${session.token}`;
@@ -81,11 +123,7 @@ async function request(method, path, { body, params } = {}) {
     /* non-JSON */
   }
   if (!res.ok) {
-    if (res.status === 401 && !path.startsWith('/auth/login')) {
-      session.clear();
-      const here = location.pathname.split('/').pop() || 'index.html';
-      if (here !== 'index.html') location.href = `index.html?next=${encodeURIComponent(here + location.search)}&expired=1`;
-    }
+    handleUnauthorized(res.status, path);
     throw new ApiError(data?.message || `Request failed (${res.status})`, res.status, data?.details);
   }
   return data;

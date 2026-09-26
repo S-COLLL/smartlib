@@ -1,5 +1,7 @@
 # 📚 SmartLib — AI Powered Library Management System
 
+**▶ Live demo: https://s-colll.github.io/smartlib/**. Pick a demo account on the login page. On GitHub Pages the backend runs inside your browser (see *Demo mode* below), so the demo works without a server.
+
 A full-stack library management platform built with **HTML5, CSS3 and vanilla JavaScript (ES modules)** on the frontend and **Node.js, Express, MongoDB (Mongoose), JWT and bcrypt** on the backend. No React, no TypeScript, no build step.
 
 Librarians can add a book with its price and exact shelf location (floor → section → shelf → rack → row → position), find it on an animated floor map, issue it, track the due date, calculate late fines automatically, collect payments (mock gateway), process returns and watch the dashboard update, all against a real MongoDB database.
@@ -155,7 +157,16 @@ npm run seed     # reset demo data (DELETES existing data)
 
 Health check: `GET http://localhost:5000/api/health`.
 
-## 10. Deploying live (Render + MongoDB Atlas, free)
+## 10. Demo mode (GitHub Pages)
+
+GitHub Pages only serves static files, so the Pages build runs in **demo mode**: `frontend/js/demo/demo-api.js` is an in-browser port of the Express API (same routes, rules and responses) working on a snapshot of the seed data (`demo-data.js`). All dates are shifted so the demo always looks current.
+
+- It turns on automatically on `*.github.io`. Anywhere else, open `index.html?demo=1` to use it, and `?demo=0` to leave it.
+- Each visitor gets a private copy of the data, saved in their browser. *Profile → Reset demo data* restores the original library.
+- `.github/workflows/pages.yml` publishes `frontend/` to the `gh-pages` branch on every push to `main`.
+- To regenerate `demo-data.js` after changing the seed data, export a freshly seeded database into the same format: arrays of documents with string IDs, plus `settings`, `counters` and `snapshotAt`.
+
+## 11. Deploying live with a real database (Render + MongoDB Atlas, free)
 
 1. **MongoDB Atlas**: create a free M0 cluster, add a database user, and under *Network Access* allow `0.0.0.0/0` (Render's free servers have changing IPs). Copy the connection string and add the database name: `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/smartlib?retryWrites=true&w=majority`.
 2. **Render**: *New → Blueprint*, connect this GitHub repo. `render.yaml` configures everything; paste the Atlas string when asked for `MONGO_URI`. `JWT_SECRET` is generated automatically.
@@ -163,7 +174,7 @@ Health check: `GET http://localhost:5000/api/health`.
 
 The free Render plan sleeps after 15 minutes without traffic, so the first request after that takes about 30–60 seconds. Every push to `main` redeploys automatically. The demo accounts are public on a live site, so change their passwords (Settings) or set `AUTO_SEED` to `false` and create your own users.
 
-## 11. Known limitations
+## 12. Known limitations
 
 - **Payments are simulated.** No real gateway is contacted; UPI QR codes and card fields are for demonstration only.
 - **The AI assistant is rule-based** (regex and keyword parsing over MongoDB), not a large language model. It handles the documented question patterns well; free-form questions fall back to a keyword search.

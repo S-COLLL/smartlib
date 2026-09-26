@@ -1,8 +1,8 @@
 // SmartLib core: layout shell, auth guard, theme, UI helpers.
-import { api, session, ApiError } from './api.js';
+import { api, session, ApiError, DEMO_MODE, resetDemoData } from './api.js';
 import { icon } from './icons.js';
 
-export { api, session, ApiError, icon };
+export { api, session, ApiError, icon, DEMO_MODE };
 
 export const STAFF = ['admin', 'librarian', 'staff'];
 export const isStaff = (u = session.user) => !!u && STAFF.includes(u.role);
@@ -451,6 +451,7 @@ function buildTopbar(user) {
       <div class="search-results hidden" id="globalSearchResults"></div>
     </div>
     <div class="topbar-actions">
+      ${DEMO_MODE ? '<span class="demo-chip hide-sm" title="Running entirely in your browser — data is saved only on this device">Demo</span>' : ''}
       <button class="icon-btn" id="scanBtn" title="Scan QR / barcode" aria-label="Scan QR code">${icon('scan')}</button>
       <div class="dropdown" id="notifDropdown">
         <button class="icon-btn" id="notifBtn" aria-label="Notifications">${icon('bell')}<span class="badge-dot hidden" id="notifCount"></span></button>
@@ -470,6 +471,7 @@ function buildTopbar(user) {
           ${user.member ? `<a class="dropdown-item" href="members.html?id=${h(user.member.memberId || '')}">${icon('user')}My membership</a>` : ''}
           <a class="dropdown-item" href="settings.html">${icon('settings')}Settings</a>
           <a class="dropdown-item" href="notifications.html">${icon('bell')}Notifications</a>
+          ${DEMO_MODE ? `<button class="dropdown-item" id="resetDemoBtn">${icon('refresh')}Reset demo data</button>` : ''}
           <button class="dropdown-item danger" id="logoutBtn">${icon('logout')}Sign out</button>
         </div>
       </div>
@@ -784,6 +786,12 @@ export async function initPage(key, { staffOnly = false, roles = null } = {}) {
     navigate('index.html?loggedout=1');
   });
   document.getElementById('scanBtn').addEventListener('click', openScanner);
+  document.getElementById('resetDemoBtn')?.addEventListener('click', async () => {
+    if (!(await confirmDialog({ title: 'Reset demo data?', message: 'All changes you made in this browser are discarded and the original demo library is restored.', confirmText: 'Reset', danger: true }))) return;
+    await resetDemoData();
+    session.clear();
+    location.href = 'index.html?reset=1';
+  });
 
   setupDropdowns();
   document.getElementById('notifDropdown').addEventListener('open', loadNotifPanel);
