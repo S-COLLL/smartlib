@@ -42,6 +42,7 @@ const showAlert = (msg, type = 'error') => {
 if (qp('expired')) showAlert('Your session has expired. Please sign in again.', 'warn');
 if (qp('loggedout')) showAlert('You have been signed out.', 'success');
 if (qp('reset')) showAlert('Demo data has been reset to the original library.', 'success');
+if (DEMO_MODE) document.querySelector('.auth-foot').textContent = 'Demo build · the full version uses JWT authentication & bcrypt';
 if (DEMO_MODE && !alertBox.innerHTML) {
   alertBox.innerHTML = `<div class="callout gold form-alert">${icon('info')}<span><strong>Live demo</strong> — SmartLib runs entirely in your browser here. Pick a demo account below; your changes are saved only on this device.</span></div>`;
 }
