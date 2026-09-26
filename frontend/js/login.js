@@ -1,4 +1,4 @@
-import { api, session } from './api.js';
+import { api, session, DEMO_MODE } from './api.js';
 import { icon } from './icons.js';
 import { BRAND_SVG, validateForm, formData, applyServerErrors, withLoading, toast, setTheme, currentTheme, qp } from './app.js';
 
@@ -41,6 +41,10 @@ const showAlert = (msg, type = 'error') => {
 };
 if (qp('expired')) showAlert('Your session has expired. Please sign in again.', 'warn');
 if (qp('loggedout')) showAlert('You have been signed out.', 'success');
+if (qp('reset')) showAlert('Demo data has been reset to the original library.', 'success');
+if (DEMO_MODE && !alertBox.innerHTML) {
+  alertBox.innerHTML = `<div class="callout gold form-alert">${icon('info')}<span><strong>Live demo</strong> — SmartLib runs entirely in your browser here. Pick a demo account below; your changes are saved only on this device.</span></div>`;
+}
 
 // Tabs
 const loginForm = document.getElementById('loginForm');
