@@ -1,0 +1,22 @@
+# Render Blueprint — deploys SmartLib (API + frontend) as one free web service.
+# In Render: New → Blueprint → pick this repo. You'll be asked for MONGO_URI.
+services:
+  - type: web
+    name: smartlib
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: MONGO_URI
+        sync: false # paste your MongoDB Atlas connection string when prompted
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: AUTO_SEED
+        value: "true" # load demo data on first start (only when the database is empty)
