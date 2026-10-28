@@ -2,10 +2,10 @@
   "name": "smartlib",
   "version": "1.0.0",
   "description": "SMARTLIB — Immersive 3D Library Management System with MySQL + MongoDB",
-  "main": "server.js",
+  "main": "backend/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
     "seed:mysql": "node database/mysql/seed.js",
     "seed:mongodb": "node database/mongodb/seed.js",
     "seed": "node database/mysql/seed.js && node database/mongodb/seed.js"

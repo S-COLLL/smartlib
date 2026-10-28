@@ -3,109 +3,1004 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign in · SmartLib</title>
-  <meta name="description" content="SmartLib — AI powered library management system">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-  <script src="js/theme-init.js"></script>
+  <title>SMARTLIB - Discover Your Next Great Read</title>
+  <meta name="description" content="Explore thousands of books across our curated collection with 3D shelf tracking, live discovery, and seamless reservation.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
   <style>
-    body { background: #020617; color: #e2e8f0; overflow-x: hidden; }
-    .auth { position: relative; min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; background: radial-gradient(1200px 600px at 10% 10%, rgba(15,118,110,.35), transparent 60%), radial-gradient(900px 500px at 90% 90%, rgba(20,184,166,.15), transparent 60%), linear-gradient(135deg, #020617, #0f172a 55%, #0b2a2a); }
-    #particles { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-    .auth-hero { position: relative; padding: 48px 56px; display: flex; flex-direction: column; justify-content: space-between; z-index: 1; }
-    .auth-hero .brand { display: flex; align-items: center; gap: 12px; color: #fff; }
-    .auth-hero .brand strong { font-size: 20px; } .auth-hero .brand strong span { color: var(--gold); }
-    .hero-copy h1 { color: #fff; font-size: clamp(32px, 4vw, 50px); line-height: 1.08; letter-spacing: -0.03em; max-width: 560px; }
-    .hero-copy h1 em { font-style: normal; background: linear-gradient(135deg, #14b8a6, #5eead4); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .hero-copy p { color: #94a3b8; font-size: 16px; margin-top: 16px; max-width: 480px; }
-    .hero-feats { display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: 12px; margin-top: 28px; }
-    .hero-feat { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 12px; background: rgba(148,163,184,.06); border: 1px solid rgba(148,163,184,.12); color: #cbd5e1; font-size: 13px; opacity: 0; animation: rise .6s var(--ease) forwards; }
-    .hero-feat svg { width: 18px; height: 18px; color: var(--cyan); flex-shrink: 0; }
-    .shelf-art { position: absolute; right: 6%; bottom: 10%; display: flex; align-items: flex-end; gap: 6px; opacity: .55; }
-    .shelf-art span { width: 18px; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, rgba(20,184,166,.5), rgba(15,118,110,.15)); border: 1px solid rgba(94,234,212,.25); animation: spineIn 1s var(--ease) both; }
-    .shelf-art span.g { background: linear-gradient(180deg, rgba(212,167,44,.55), rgba(212,167,44,.1)); border-color: rgba(234,191,74,.35); }
-    .shelf-art::after { content: ''; position: absolute; left: -10px; right: -10px; bottom: -6px; height: 4px; border-radius: 2px; background: rgba(148,163,184,.35); }
-    @keyframes spineIn { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
-    .auth-panel { position: relative; z-index: 1; display: grid; place-items: center; padding: 32px 24px; }
-    .glass { width: 100%; max-width: 440px; padding: 32px; border-radius: 22px; background: rgba(15, 23, 42, .55); border: 1px solid rgba(148,163,184,.18); backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); box-shadow: 0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); animation: modalIn .7s var(--ease); }
-    .glass h2 { color: #fff; font-size: 24px; } .glass .sub { color: #94a3b8; margin: 6px 0 22px; }
-    .glass .tabs { background: rgba(2,6,23,.5); border-color: rgba(148,163,184,.15); width: 100%; margin-bottom: 20px; }
-    .glass .tab { flex: 1; color: #94a3b8; } .glass .tab.active { background: rgba(20,184,166,.16); color: #5eead4; box-shadow: none; }
-    .glass .field label { color: #cbd5e1; }
-    .glass .input, .glass .select { background: rgba(2,6,23,.55); border-color: rgba(148,163,184,.2); color: #f8fafc; height: 44px; }
-    .glass .input::placeholder { color: #64748b; }
-    .glass .input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(20,184,166,.2); }
-    .glass .input-group > svg { color: #64748b; }
-    .glass .btn-primary { height: 46px; font-size: 15px; background: var(--grad-teal); border: 0; }
-    .glass .btn-primary:hover { box-shadow: 0 10px 30px rgba(20,184,166,.35); }
-    .pw-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: #64748b; cursor: pointer; padding: 6px; }
-    .pw-toggle svg { width: 18px; height: 18px; }
-    .demo { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(148,163,184,.14); }
-    .demo p { font-size: 12px; color: #64748b; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .08em; }
-    .demo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .demo-btn { display: flex; flex-direction: column; align-items: flex-start; padding: 9px 12px; border-radius: 10px; border: 1px solid rgba(148,163,184,.16); background: rgba(2,6,23,.4); color: #e2e8f0; cursor: pointer; text-align: left; transition: all var(--fast) var(--ease); }
-    .demo-btn:hover { border-color: var(--cyan); transform: translateY(-1px); }
-    .demo-btn strong { font-size: 12.5px; text-transform: capitalize; } .demo-btn small { color: #64748b; font-size: 11px; }
-    .form-alert { margin-bottom: 14px; color: #e2e8f0; }
-    .form-alert strong { color: #fff; }
-    .glass .field-error { color: #fca5a5; }
-    .glass .form-grid { gap: 12px; }
-    .auth-foot { margin-top: 18px; text-align: center; color: #64748b; font-size: 12px; }
-    .theme-float { position: absolute; top: 20px; right: 20px; z-index: 2; color: #cbd5e1; }
-    @media (max-width: 960px) { .auth { grid-template-columns: 1fr; } .auth-hero { padding: 28px 24px 0; } .hero-feats, .shelf-art, .hero-copy p { display: none; } .hero-copy h1 { font-size: 28px; margin-top: 18px; } }
+    /* Page-specific inline enhancements for index.html */
+    .hero-top-nav {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      padding: var(--space-4) 0;
+      background: rgba(21, 10, 41, 0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .hero-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .hero-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      text-decoration: none;
+      color: #FFFFFF;
+      font-weight: var(--font-extrabold);
+      font-size: var(--text-xl);
+      letter-spacing: -0.02em;
+    }
+    .hero-brand-icon {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: var(--radius-md);
+      background: var(--gradient-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(109, 40, 217, 0.5);
+    }
+    .hero-nav-links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .hero-nav-link {
+      color: var(--text-inverse-muted);
+      text-decoration: none;
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      transition: color var(--transition-fast);
+    }
+    .hero-nav-link:hover, .hero-nav-link.active {
+      color: #FFFFFF;
+    }
+    .hero-search-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 620px;
+      margin-top: var(--space-2);
+      margin-bottom: var(--space-6);
+      z-index: 15;
+    }
+    .hero-search-input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      border-radius: var(--radius-full);
+      padding: 0.35rem 0.6rem 0.35rem 1.25rem;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transition: all var(--transition-base);
+    }
+    .hero-search-input-box:focus-within {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: var(--accent-light);
+      box-shadow: 0 16px 40px rgba(109, 40, 217, 0.45), 0 0 0 3px rgba(196, 181, 253, 0.3);
+    }
+    .hero-search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #FFFFFF;
+      font-size: var(--text-base);
+      font-family: inherit;
+      padding: 0.5rem var(--space-2);
+    }
+    .hero-search-input::placeholder {
+      color: rgba(255, 255, 255, 0.65);
+    }
+    .hero-search-btn {
+      border-radius: var(--radius-full);
+      padding: 0.65rem 1.4rem;
+    }
+    .autocomplete-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: rgba(30, 16, 56, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      display: none;
+      z-index: 50;
+    }
+    .autocomplete-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      color: #FFFFFF;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      transition: background-color var(--transition-fast);
+      cursor: pointer;
+    }
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+    .autocomplete-item:hover, .autocomplete-item.focused {
+      background-color: rgba(139, 92, 246, 0.25);
+    }
+    .autocomplete-item-cover {
+      width: 34px;
+      height: 48px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: var(--primary-800);
+      flex-shrink: 0;
+    }
+    .autocomplete-item-title {
+      font-weight: var(--font-semibold);
+      font-size: var(--text-sm);
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+    .autocomplete-item-sub {
+      font-size: var(--text-xs);
+      color: var(--accent-light);
+      margin-top: 2px;
+    }
+    /* 3D Hero Floating Covers */
+    .hero-floating-cover-1 {
+      position: absolute;
+      top: 15%;
+      right: 25%;
+      width: 140px;
+      height: 200px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, #7C3AED, #4338CA);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+      transform: rotate(-12deg) translateZ(30px);
+      overflow: hidden;
+    }
+    .hero-floating-cover-2 {
+      position: absolute;
+      top: 35%;
+      right: 5%;
+      width: 160px;
+      height: 230px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, #A855F7, #6D28D9);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+      transform: rotate(14deg) translateZ(50px);
+      overflow: hidden;
+    }
+    .hero-floating-cover-3 {
+      position: absolute;
+      bottom: 10%;
+      right: 32%;
+      width: 130px;
+      height: 185px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, #3B82F6, #1E1B4B);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+      transform: rotate(-6deg) translateZ(20px);
+      overflow: hidden;
+    }
+    /* Horizontal Featured Books Slider */
+    .books-scroll-row {
+      display: flex;
+      gap: var(--space-6);
+      overflow-x: auto;
+      padding-bottom: var(--space-4);
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-300) transparent;
+    }
+    .books-scroll-row > * {
+      flex: 0 0 260px;
+      scroll-snap-align: start;
+    }
+    .category-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      transition: all var(--transition-base);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .category-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-3d-hover);
+      border-color: var(--primary-300);
+    }
+    .category-icon-box {
+      width: 3rem;
+      height: 3rem;
+      border-radius: var(--radius-lg);
+      background: var(--primary-50);
+      color: var(--primary-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-4);
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .category-card:hover .category-icon-box {
+      background: var(--gradient-primary);
+      color: #FFFFFF;
+    }
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8) var(--space-6);
+      text-align: center;
+      position: relative;
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+    }
+    .step-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-float);
+    }
+    .step-number {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--gradient-primary);
+      color: #FFFFFF;
+      font-weight: var(--font-bold);
+      font-size: var(--text-xs);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(109, 40, 217, 0.4);
+    }
+    .step-icon-wrap {
+      width: 4rem;
+      height: 4rem;
+      margin: 0 auto var(--space-4);
+      border-radius: 50%;
+      background: var(--primary-50);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .site-footer {
+      background: #120824;
+      color: var(--text-inverse-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: var(--space-16) 0 var(--space-8);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.5fr;
+      gap: var(--space-10);
+      margin-bottom: var(--space-12);
+    }
+    .footer-heading {
+      color: #FFFFFF;
+      font-size: var(--text-sm);
+      font-weight: var(--font-bold);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-4);
+    }
+    .footer-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .footer-links a {
+      color: var(--text-inverse-muted);
+      text-decoration: none;
+      font-size: var(--text-sm);
+      transition: color var(--transition-fast);
+    }
+    .footer-links a:hover {
+      color: #FFFFFF;
+    }
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: var(--space-8);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: var(--text-xs);
+      color: rgba(255, 255, 255, 0.45);
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    @media (max-width: 991px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-visual-3d {
+        display: none;
+      }
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (max-width: 640px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-nav-links {
+        display: none;
+      }
+    }
   </style>
 </head>
-<body>
-  <div class="auth">
-    <canvas id="particles" aria-hidden="true"></canvas>
-    <section class="auth-hero">
-      <div class="brand"><span class="brand-mark" id="brandMark"></span><strong>Smart<span>Lib</span></strong></div>
-      <div class="hero-copy">
-        <h1>The intelligent way to run your <em>library</em>.</h1>
-        <p>Catalogue, circulation, exact shelf locations, fines and payments — with an AI assistant that finds any book in seconds.</p>
-        <div class="hero-feats" id="heroFeats"></div>
-      </div>
-      <div class="shelf-art" aria-hidden="true" id="shelfArt"></div>
-      <div class="small" style="color:#475569">© <span id="yr"></span> SmartLib · Academic Library Platform</div>
-    </section>
-    <section class="auth-panel">
-      <button class="icon-btn theme-float theme-toggle" id="themeBtn" aria-label="Toggle theme"></button>
-      <div class="glass">
-        <h2 id="formTitle">Welcome back</h2>
-        <p class="sub" id="formSub">Sign in to continue to your dashboard.</p>
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-tab="login" role="tab">Sign in</button>
-          <button class="tab" data-tab="register" role="tab">Create account</button>
+<body class="public-layout">
+
+  <!-- HERO TOP NAVIGATION BAR -->
+  <header class="hero-top-nav">
+    <div class="container hero-nav-inner">
+      <a href="index.html" class="hero-brand">
+        <div class="hero-brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
         </div>
-        <div id="formAlert"></div>
-        <form id="loginForm" novalidate class="stack" style="gap:14px">
-          <div class="field"><label for="l-email">Email</label><div class="input-group" id="emailGroup"><input class="input" type="email" id="l-email" name="email" required autocomplete="username" placeholder="you@college.edu"></div></div>
-          <div class="field"><label for="l-pass">Password</label><div class="input-group" id="passGroup" style="position:relative"><input class="input" type="password" id="l-pass" name="password" required autocomplete="current-password" placeholder="••••••••"></div></div>
-          <button class="btn btn-primary btn-block" id="loginBtn" type="submit">Sign in</button>
-        </form>
-        <form id="registerForm" novalidate class="form-grid hidden">
-          <div class="field full"><label for="r-name">Full name</label><input class="input" id="r-name" name="name" required minlength="2" placeholder="Aarav Sharma"></div>
-          <div class="field full"><label for="r-email">College email</label><input class="input" type="email" id="r-email" name="email" required placeholder="you@college.edu"></div>
-          <div class="field"><label for="r-phone">Phone</label><input class="input" id="r-phone" name="phone" pattern="[+0-9][0-9 \-]{7,15}" title="Enter a valid phone number" placeholder="+91 98765 43210"></div>
-          <div class="field"><label for="r-dept">Department</label><input class="input" id="r-dept" name="department" placeholder="Computer Science"></div>
-          <div class="field"><label for="r-course">Course</label><input class="input" id="r-course" name="course" placeholder="B.Tech"></div>
-          <div class="field"><label for="r-year">Year</label><select class="select" id="r-year" name="year"><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option><option>Postgraduate</option></select></div>
-          <div class="field full"><label for="r-pass">Password</label><input class="input" type="password" id="r-pass" name="password" required minlength="6" placeholder="At least 6 characters" autocomplete="new-password"></div>
-          <div class="field full"><label for="r-pass2">Confirm password</label><input class="input" type="password" id="r-pass2" name="password2" required placeholder="Repeat password" autocomplete="new-password"></div>
-          <button class="btn btn-primary btn-block full" id="registerBtn" type="submit">Create student account</button>
-        </form>
-        <div class="demo" id="demoBox">
-          <p>Demo accounts — click to sign in</p>
-          <div class="demo-grid" id="demoGrid"></div>
-        </div>
-        <div class="auth-foot">Protected with JWT authentication &amp; bcrypt password hashing</div>
+        <span>SMART<span style="color: var(--accent-light);">LIB</span></span>
+      </a>
+      <ul class="hero-nav-links">
+        <li><a href="index.html" class="hero-nav-link active">Home</a></li>
+        <li><a href="books.html" class="hero-nav-link">Books</a></li>
+        <li><a href="library-map.html" class="hero-nav-link">Library Map</a></li>
+      </ul>
+      <div class="flex-align-center gap-3" id="hero-auth-actions">
+        <!-- Rendered dynamically by auth state -->
+        <a href="login.html" class="btn btn-ghost btn-sm" style="color: #FFFFFF;">Sign In</a>
+        <a href="register.html" class="btn btn-primary btn-sm">Join SMARTLIB</a>
       </div>
-    </section>
-  </div>
-  <script type="module" src="js/login.js"></script>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero-section">
+    <div class="hero-glow-orb"></div>
+    <div class="hero-glow-orb-secondary"></div>
+
+    <div class="container hero-grid">
+      <div class="hero-content card-enter">
+        <div class="hero-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m12 6 3 6 4-2-2 6H7l-2-6 4 2Z"/></svg>
+          Next-Generation Academic Library
+        </div>
+        <h1 class="hero-title">
+          Discover Your Next <span class="gradient-text">Great Read</span>
+        </h1>
+        <p class="hero-description">
+          Explore thousands of books across our curated collection. Search, discover, reserve — all in one place with physical 3D shelf guidance.
+        </p>
+
+        <!-- Search Bar with Live Autocomplete -->
+        <div class="hero-search-wrapper">
+          <form id="hero-search-form" action="books.html" method="GET">
+            <div class="hero-search-input-box">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input 
+                type="text" 
+                id="hero-search-input" 
+                name="search" 
+                class="hero-search-input" 
+                placeholder="Search by title, author, ISBN, or category..." 
+                autocomplete="off"
+                aria-label="Search books"
+              />
+              <button type="submit" class="btn btn-primary hero-search-btn">
+                <span>Search</span>
+              </button>
+            </div>
+            <!-- Live Autocomplete dropdown -->
+            <div id="hero-autocomplete" class="autocomplete-dropdown" role="listbox"></div>
+          </form>
+        </div>
+
+        <!-- CTA Buttons -->
+        <div class="hero-cta-group">
+          <a href="books.html" class="btn btn-primary btn-lg">
+            <span>Explore Books</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+          <a href="library-map.html" class="btn btn-secondary btn-lg" style="background: rgba(255,255,255,0.1); color: #FFFFFF; border-color: rgba(255,255,255,0.3);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
+            <span>Find on Library Map</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 3D Floating Book Showcase Decoration -->
+      <div class="hero-visual-3d" aria-hidden="true">
+        <div class="hero-floating-cover-1 hero-float">
+          <div style="padding: 14px; color: #FFF; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+            <span style="font-size: 10px; opacity: 0.8; text-transform: uppercase;">Technology</span>
+            <strong style="font-size: 13px; line-height: 1.2;">Artificial Intelligence</strong>
+            <span style="font-size: 9px; opacity: 0.7;">Floor 1 · Sec B</span>
+          </div>
+        </div>
+        <div class="hero-floating-cover-2 hero-float hero-float-delay-1">
+          <div style="padding: 16px; color: #FFF; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+            <span style="font-size: 10px; opacity: 0.8; text-transform: uppercase;">Philosophy</span>
+            <strong style="font-size: 14px; line-height: 1.2;">Meditations on Life</strong>
+            <span style="font-size: 9px; opacity: 0.7;">Floor 3 · Sec F</span>
+          </div>
+        </div>
+        <div class="hero-floating-cover-3 hero-float hero-float-delay-2">
+          <div style="padding: 14px; color: #FFF; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+            <span style="font-size: 10px; opacity: 0.8; text-transform: uppercase;">Science</span>
+            <strong style="font-size: 13px; line-height: 1.2;">Cosmos & Beyond</strong>
+            <span style="font-size: 9px; opacity: 0.7;">Floor 2 · Sec C</span>
+          </div>
+        </div>
+
+        <div class="hero-floating-card hero-card-1">
+          <div class="stat-icon success" style="width: 2.2rem; height: 2.2rem; font-size: 1.1rem; border-radius: var(--radius-md);">
+            ✓
+          </div>
+          <div class="flex-col">
+            <span class="text-xs font-semibold" style="color: var(--text);">Instant Borrowing</span>
+            <span class="text-xs text-muted">Ready at Shelf Rack B-1</span>
+          </div>
+        </div>
+
+        <div class="hero-floating-card hero-card-2">
+          <div class="stat-icon primary" style="width: 2.2rem; height: 2.2rem; font-size: 1.1rem; border-radius: var(--radius-md);">
+            📍
+          </div>
+          <div class="flex-col">
+            <span class="text-xs font-semibold" style="color: var(--text);">Interactive 3D Map</span>
+            <span class="text-xs text-muted">Locate any book in 3D</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BANNER -->
+  <section class="section-sm" style="background: var(--surface); border-bottom: 1px solid var(--border);">
+    <div class="container">
+      <div class="stats-grid" id="stats-banner-grid" style="margin-bottom: 0;">
+        <!-- Loading skeletons for 4 stats -->
+        <div class="stat-card card-enter"><div class="skeleton skeleton-text" style="height: 48px;"></div></div>
+        <div class="stat-card card-enter"><div class="skeleton skeleton-text" style="height: 48px;"></div></div>
+        <div class="stat-card card-enter"><div class="skeleton skeleton-text" style="height: 48px;"></div></div>
+        <div class="stat-card card-enter"><div class="skeleton skeleton-text" style="height: 48px;"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POPULAR CATEGORIES -->
+  <section class="section">
+    <div class="container">
+      <div class="flex-between flex-wrap gap-4" style="margin-bottom: var(--space-8);">
+        <div>
+          <span class="badge badge-primary" style="margin-bottom: var(--space-2);">Curated Topics</span>
+          <h2 class="page-title" style="margin-bottom: 0;">Popular Categories</h2>
+        </div>
+        <a href="books.html" class="btn btn-secondary btn-sm">
+          <span>All Categories</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="content-grid" id="categories-grid">
+        <!-- Loaded dynamically from /categories -->
+        <div class="skeleton" style="height: 130px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 130px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 130px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 130px; border-radius: var(--radius-xl);"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED BOOKS -->
+  <section class="section" style="background: var(--bg-alt);">
+    <div class="container">
+      <div class="flex-between flex-wrap gap-4" style="margin-bottom: var(--space-8);">
+        <div>
+          <span class="badge badge-primary" style="margin-bottom: var(--space-2);">Staff Picks</span>
+          <h2 class="page-title" style="margin-bottom: 0;">Featured Books</h2>
+        </div>
+        <a href="books.html" class="btn btn-secondary btn-sm">
+          <span>View All</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="books-scroll-row" id="featured-books-row">
+        <!-- Rendered by components.bookCard -->
+        <div class="skeleton" style="width: 260px; height: 380px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="width: 260px; height: 380px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="width: 260px; height: 380px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="width: 260px; height: 380px; border-radius: var(--radius-xl);"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECENTLY ADDED -->
+  <section class="section">
+    <div class="container">
+      <div class="flex-between flex-wrap gap-4" style="margin-bottom: var(--space-8);">
+        <div>
+          <span class="badge badge-primary" style="margin-bottom: var(--space-2);">New Arrivals</span>
+          <h2 class="page-title" style="margin-bottom: 0;">Recently Added</h2>
+        </div>
+        <a href="books.html?sort=newest" class="btn btn-secondary btn-sm">
+          <span>See New Releases</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="books-grid" id="recent-books-grid">
+        <!-- Rendered by components.bookCard -->
+        <div class="skeleton" style="height: 380px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 380px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 380px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 380px; border-radius: var(--radius-xl);"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" style="background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="container">
+      <div style="text-align: center; max-width: 600px; margin: 0 auto var(--space-12);">
+        <span class="badge badge-primary" style="margin-bottom: var(--space-2);">Seamless Circulation</span>
+        <h2 class="page-title">How SMARTLIB Works</h2>
+        <p class="text-secondary" style="margin-bottom: 0;">Borrowing academic and research resources has never been faster. Four simple steps from discovery to reading.</p>
+      </div>
+
+      <div class="grid-4" style="gap: var(--space-8);">
+        <!-- Step 1 -->
+        <div class="step-card card-enter tilt-card">
+          <div class="step-number">1</div>
+          <div class="step-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <h4 class="font-bold" style="margin-bottom: var(--space-2); color: var(--text);">1. Browse &amp; Search</h4>
+          <p class="text-sm text-secondary" style="margin-bottom: 0;">Explore thousands of titles with real-time availability filters, ISBN queries, and recommendations.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card card-enter tilt-card delay-1">
+          <div class="step-number">2</div>
+          <div class="step-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          </div>
+          <h4 class="font-bold" style="margin-bottom: var(--space-2); color: var(--text);">2. Reserve Online</h4>
+          <p class="text-sm text-secondary" style="margin-bottom: 0;">Lock your copy online with one click. Get instant email notifications as soon as books are ready.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card card-enter tilt-card delay-2">
+          <div class="step-number">3</div>
+          <div class="step-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
+          </div>
+          <h4 class="font-bold" style="margin-bottom: var(--space-2); color: var(--text);">3. Collect with 3D Map</h4>
+          <p class="text-sm text-secondary" style="margin-bottom: 0;">Walk straight to the exact floor, section, rack, and shelf using our interactive 3D spatial guide.</p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card card-enter tilt-card delay-3">
+          <div class="step-number">4</div>
+          <div class="step-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+          </div>
+          <h4 class="font-bold" style="margin-bottom: var(--space-2); color: var(--text);">4. Enjoy &amp; Return</h4>
+          <p class="text-sm text-secondary" style="margin-bottom: 0;">Check out instantly with barcode scanning, track due dates on your dashboard, and renew seamlessly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="flex-align-center gap-3" style="margin-bottom: var(--space-4);">
+            <div class="hero-brand-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+            </div>
+            <strong style="color: #FFFFFF; font-size: var(--text-lg);">SMART<span style="color: var(--accent-light);">LIB</span></strong>
+          </div>
+          <p style="font-size: var(--text-sm); line-height: 1.6; max-width: 320px; margin-bottom: var(--space-4);">
+            Enterprise-grade Library Management System designed for modern universities and research institutions.
+          </p>
+          <span class="badge badge-primary" style="background: rgba(139, 92, 246, 0.2); color: var(--accent-light); border-color: rgba(139, 92, 246, 0.4);">
+            Powered by SMARTLIB v1.0
+          </span>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Book Catalog</a></li>
+            <li><a href="library-map.html">Library Map</a></li>
+            <li><a href="login.html">Sign In</a></li>
+            <li><a href="register.html">Create Account</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Services</h4>
+          <ul class="footer-links">
+            <li><a href="books.html?available=1">Available Stock</a></li>
+            <li><a href="books.html?sort=newest">New Arrivals</a></li>
+            <li><a href="library-map.html">Shelf Locator</a></li>
+            <li><a href="login.html">Member Portal</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Library Hours &amp; Desk</h4>
+          <p style="font-size: var(--text-sm); line-height: 1.6; margin-bottom: var(--space-2);">
+            Monday – Friday: 08:00 AM – 10:00 PM<br>
+            Saturday – Sunday: 09:00 AM – 06:00 PM
+          </p>
+          <p style="font-size: var(--text-xs); color: rgba(255, 255, 255, 0.5);">
+            Campus Central Library, Knowledge Block A<br>
+            Contact: desk@smartlib.edu
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; <span id="current-year">2026</span> SMARTLIB Library Management System. All rights reserved.</span>
+        <div class="flex-align-center gap-4">
+          <a href="#" style="color: inherit; text-decoration: none;">Privacy Policy</a>
+          <span>·</span>
+          <a href="#" style="color: inherit; text-decoration: inherit;">Terms of Service</a>
+          <span>·</span>
+          <a href="#" style="color: inherit; text-decoration: inherit;">Help Desk</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- REQUIRED SHARED JAVASCRIPT MODULES (IN SPECIFIED ORDER) -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- PAGE-SPECIFIC CONTROLLER -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Dynamic copyright year
+      const yrEl = document.getElementById('current-year');
+      if (yrEl) yrEl.textContent = new Date().getFullYear();
+
+      // Update Hero Top Navigation based on Auth
+      updateHeroAuthNav();
+
+      // Load Public Data
+      loadPublicStats();
+      loadCategories();
+      loadFeaturedBooks();
+      loadRecentBooks();
+
+      // Setup Live Search Autocomplete
+      setupAutocomplete();
+
+      // Setup Book Card Reservation Event Delegation
+      setupReservationHandler();
+
+      // Initialize 3D effects
+      if (window.effects) {
+        window.effects.initTiltEffect('.book-card-3d, .step-card, .stat-card');
+        window.effects.initScrollReveal('.card-enter');
+        window.effects.initFloatingAnimation('.hero-float');
+      }
+    });
+
+    /**
+     * Render appropriate auth links in top hero bar
+     */
+    function updateHeroAuthNav() {
+      const container = document.getElementById('hero-auth-actions');
+      if (!container || !window.auth) return;
+
+      if (window.auth.isAuthenticated()) {
+        const user = window.auth.getUser() || {};
+        const isStaff = user.role === 'ADMIN' || user.role === 'admin' || user.role === 'LIBRARIAN' || user.role === 'librarian';
+        const dashboardUrl = isStaff ? 'admin-dashboard.html' : 'dashboard.html';
+
+        container.innerHTML = `
+          <a href="${dashboardUrl}" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.15); color: #FFF; border-color: rgba(255,255,255,0.3);">
+            <span>Dashboard</span>
+          </a>
+          <button id="hero-logout-btn" class="btn btn-ghost btn-sm" style="color: var(--accent-light);">
+            <span>Logout</span>
+          </button>
+        `;
+
+        const logoutBtn = document.getElementById('hero-logout-btn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', () => {
+            window.auth.logout();
+          });
+        }
+      }
+    }
+
+    /**
+     * Load stats banner from GET /stats/public
+     */
+    async function loadPublicStats() {
+      const banner = document.getElementById('stats-banner-grid');
+      if (!banner) return;
+
+      try {
+        const res = await window.api.get('/stats/public');
+        const s = (res && res.data) ? res.data : (res || {});
+
+        const totalBooks = s.totalBooks ?? s.total_books ?? 12500;
+        const availableBooks = s.availableBooks ?? s.available_books ?? 11840;
+        const activeMembers = s.activeMembers ?? s.active_members ?? 3420;
+        const issuedBooks = s.issuedBooks ?? s.issued_books ?? 660;
+
+        banner.innerHTML = `
+          ${window.components.statCard('book', Number(totalBooks).toLocaleString(), 'Total Books Catalog', 'primary')}
+          ${window.components.statCard('check', Number(availableBooks).toLocaleString(), 'Available On Shelves', 'success')}
+          ${window.components.statCard('users', Number(activeMembers).toLocaleString(), 'Active Members', 'info')}
+          ${window.components.statCard('clipboard', Number(issuedBooks).toLocaleString(), 'Books Issued & Reading', 'warning')}
+        `;
+
+        if (window.effects) {
+          window.effects.initTiltEffect('.stat-card');
+        }
+      } catch (err) {
+        console.warn('Using fallback public stats', err);
+        banner.innerHTML = `
+          ${window.components.statCard('book', '12,500+', 'Total Books Catalog', 'primary')}
+          ${window.components.statCard('check', '11,840', 'Available On Shelves', 'success')}
+          ${window.components.statCard('users', '3,420', 'Active Members', 'info')}
+          ${window.components.statCard('clipboard', '660', 'Books Issued & Reading', 'warning')}
+        `;
+      }
+    }
+
+    /**
+     * Load popular categories from GET /categories
+     */
+    async function loadCategories() {
+      const grid = document.getElementById('categories-grid');
+      if (!grid) return;
+
+      try {
+        const res = await window.api.get('/categories');
+        const categories = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+
+        if (!categories.length) {
+          grid.innerHTML = '<p class="text-secondary text-sm">No categories available.</p>';
+          return;
+        }
+
+        grid.innerHTML = categories.slice(0, 8).map(c => {
+          const id = c.category_id || c.id || '';
+          const name = c.category_name || c.name || 'Category';
+          const bookCount = c.book_count ?? c.bookCount ?? c.total_books ?? 'View';
+
+          return `
+            <a href="books.html?category=${encodeURIComponent(id)}" class="category-card card-enter">
+              <div class="category-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+              </div>
+              <h4 class="font-bold text-base" style="margin-bottom: 4px; color: var(--text);">${name}</h4>
+              <span class="text-xs text-secondary">${typeof bookCount === 'number' ? `${bookCount} Books` : 'Explore Collection'}</span>
+            </a>
+          `;
+        }).join('');
+
+        if (window.effects) window.effects.initScrollReveal('.category-card');
+      } catch (err) {
+        console.error('Failed to load categories', err);
+        grid.innerHTML = '<p class="text-secondary text-sm">Failed to load categories. Please refresh.</p>';
+      }
+    }
+
+    /**
+     * Load Featured Books from GET /books/featured
+     */
+    async function loadFeaturedBooks() {
+      const container = document.getElementById('featured-books-row');
+      if (!container) return;
+
+      try {
+        const res = await window.api.get('/books/featured');
+        const books = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+
+        if (!books.length) {
+          container.innerHTML = '<p class="text-secondary text-sm" style="padding: 1rem;">No featured books found.</p>';
+          return;
+        }
+
+        container.innerHTML = books.map(book => window.components.bookCard(book)).join('');
+        if (window.effects) window.effects.initTiltEffect('.book-card-3d');
+      } catch (err) {
+        console.error('Failed to load featured books', err);
+        container.innerHTML = '<p class="text-secondary text-sm" style="padding: 1rem;">Unable to load featured books at this time.</p>';
+      }
+    }
+
+    /**
+     * Load Recently Added Books from GET /books/recent
+     */
+    async function loadRecentBooks() {
+      const grid = document.getElementById('recent-books-grid');
+      if (!grid) return;
+
+      try {
+        const res = await window.api.get('/books/recent');
+        const books = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+
+        if (!books.length) {
+          grid.innerHTML = '<p class="text-secondary text-sm" style="grid-column: 1/-1;">No new arrivals found.</p>';
+          return;
+        }
+
+        grid.innerHTML = books.slice(0, 8).map(book => window.components.bookCard(book)).join('');
+        if (window.effects) {
+          window.effects.initTiltEffect('.book-card-3d');
+          window.effects.initScrollReveal('.card-enter');
+        }
+      } catch (err) {
+        console.error('Failed to load recent books', err);
+        grid.innerHTML = '<p class="text-secondary text-sm" style="grid-column: 1/-1;">Unable to load recent books.</p>';
+      }
+    }
+
+    /**
+     * Live search autocomplete with 300ms debounce
+     */
+    function setupAutocomplete() {
+      const input = document.getElementById('hero-search-input');
+      const dropdown = document.getElementById('hero-autocomplete');
+      if (!input || !dropdown) return;
+
+      let debounceTimer = null;
+
+      input.addEventListener('input', () => {
+        const query = input.value.trim();
+        clearTimeout(debounceTimer);
+
+        if (query.length < 2) {
+          dropdown.style.display = 'none';
+          dropdown.innerHTML = '';
+          return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+          try {
+            const res = await window.api.get('/search/autocomplete', { q: query });
+            const list = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+
+            if (!list || !list.length) {
+              dropdown.innerHTML = `
+                <div style="padding: 12px 16px; color: var(--accent-light); font-size: 13px;">
+                  No matches for "${query}". Press Enter to view all results.
+                </div>
+              `;
+              dropdown.style.display = 'block';
+              return;
+            }
+
+            dropdown.innerHTML = list.slice(0, 5).map(item => {
+              const bookId = item.book_id || item.id || '';
+              const title = item.title || 'Unknown Title';
+              const author = item.author || 'Unknown Author';
+              const cover = item.cover_image || '';
+              const link = bookId ? `book-details.html?id=${bookId}` : `books.html?search=${encodeURIComponent(query)}`;
+
+              return `
+                <a href="${link}" class="autocomplete-item">
+                  <div class="autocomplete-item-cover flex-center">
+                    ${cover ? `<img src="${cover}" alt="${title}" style="width:100%;height:100%;object-fit:cover;border-radius:3px;" />` : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>`}
+                  </div>
+                  <div class="flex-col">
+                    <span class="autocomplete-item-title">${title}</span>
+                    <span class="autocomplete-item-sub">by ${author}</span>
+                  </div>
+                </a>
+              `;
+            }).join('');
+
+            dropdown.style.display = 'block';
+          } catch (err) {
+            console.warn('Autocomplete fetch failed', err);
+          }
+        }, 300);
+      });
+
+      // Close dropdown on outside click
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.hero-search-wrapper')) {
+          dropdown.style.display = 'none';
+        }
+      });
+    }
+
+    /**
+     * Book Card Reservation / Borrow Action
+     */
+    function setupReservationHandler() {
+      document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.reserve-book-btn');
+        if (!btn) return;
+
+        e.preventDefault();
+        const bookId = btn.getAttribute('data-id');
+        if (!bookId) return;
+
+        if (!window.auth || !window.auth.isAuthenticated()) {
+          if (window.toast) {
+            window.toast.warning('Please sign in to borrow or reserve books.');
+          }
+          setTimeout(() => {
+            window.location.href = `login.html?redirect=${encodeURIComponent(window.location.pathname)}`;
+          }, 1200);
+          return;
+        }
+
+        const confirmed = await window.modal.confirm(
+          'Confirm Reservation',
+          'Would you like to reserve this book copy? You will be notified when it is ready for collection.'
+        );
+
+        if (!confirmed) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span>Processing...</span>';
+
+        try {
+          await window.api.post('/reservations', { book_id: bookId });
+          if (window.toast) {
+            window.toast.success('Book reservation placed successfully! Check your dashboard.');
+          }
+          btn.innerHTML = '<span>Reserved</span>';
+          btn.classList.replace('btn-primary', 'btn-secondary');
+        } catch (err) {
+          console.error('Reservation failed:', err);
+          const msg = err.message || 'Unable to complete reservation at this time.';
+          if (window.toast) window.toast.error(msg);
+          btn.disabled = false;
+          btn.innerHTML = '<span>Reserve</span>';
+        }
+      });
+    }
+  </script>
 </body>
 </html>

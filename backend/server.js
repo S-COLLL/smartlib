@@ -1,92 +1,215 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
-const { notFound, errorHandler } = require('./middleware/error');
-const { runMaintenance } = require('./utils/library');
+const helmet = require('helmet');
+const fs = require('fs');
+const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 
-function createApp() {
-  const app = express();
-  app.disable('x-powered-by');
-  app.set('trust proxy', 1); // behind Render / other reverse proxies
-  app.use(cors({ origin: process.env.CLIENT_ORIGIN && process.env.CLIENT_ORIGIN !== '*' ? process.env.CLIENT_ORIGIN.split(',') : true }));
-  app.use(express.json({ limit: '2mb' }));
+// Import database configurations
+const { pool, testConnection } = require('./config/db');
+const { connect: connectMongoDB } = require('./config/mongodb');
 
-  app.get('/api/health', (_req, res) => res.json({ success: true, status: 'ok', time: new Date() }));
-  app.get('/api/v1/health', (_req, res) => res.json({ success: true, status: 'ok', time: new Date() }));
+// Import route modules
+const authRoutes = require('./routes/auth');
+const booksRoutes = require('./routes/books');
+const categoriesRoutes = require('./routes/categories');
+const shelvesRoutes = require('./routes/shelves');
+const membersRoutes = require('./routes/members');
+const loansRoutes = require('./routes/loans');
+const reservationsRoutes = require('./routes/reservations');
+const finesRoutes = require('./routes/fines');
+const reviewsRoutes = require('./routes/reviews');
+const notificationsRoutes = require('./routes/notifications');
+const activityRoutes = require('./routes/activity');
+const statsRoutes = require('./routes/stats');
+const searchRoutes = require('./routes/search');
+const uploadRoutes = require('./routes/upload');
 
-  const registerRoutes = (prefix) => {
-    app.use(`${prefix}/auth`, require('./routes/auth'));
-    app.use(`${prefix}/books`, require('./routes/books'));
-    app.use(`${prefix}/authors`, require('./routes/authors'));
-    app.use(`${prefix}/categories`, require('./routes/categories'));
-    app.use(`${prefix}/shelves`, require('./routes/shelves'));
-    app.use(`${prefix}/members`, require('./routes/members'));
-    app.use(`${prefix}/issues`, require('./routes/issues'));
-    app.use(`${prefix}/loans`, require('./routes/loans'));
-    app.use(`${prefix}/returns`, require('./routes/returns'));
-    app.use(`${prefix}/reservations`, require('./routes/reservations'));
-    app.use(`${prefix}/fines`, require('./routes/fines'));
-    app.use(`${prefix}/payments`, require('./routes/payments'));
-    app.use(`${prefix}/notifications`, require('./routes/notifications'));
-    app.use(`${prefix}/reviews`, require('./routes/reviews'));
-    app.use(`${prefix}/reports`, require('./routes/reports'));
-    app.use(`${prefix}/settings`, require('./routes/settings'));
-    app.use(`${prefix}/ai`, require('./routes/ai'));
-  };
+// Import centralized error handler
+const errorHandler = require('./middleware/errorHandler');
 
-  registerRoutes('/api');
-  registerRoutes('/api/v1');
+const app = express();
+const PORT = process.env.PORT || 5000;
 
-  app.use('/api', notFound);
+// ==========================================
+// 1. Security & Parsing Middleware
+// ==========================================
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Disabled to allow frontend fonts, SVGs, and inline modules
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
-  // Serve the frontend from the same origin
-  const frontend = path.join(__dirname, '..', 'frontend');
-  app.use(express.static(frontend, { extensions: ['html'] }));
-  app.get('/', (_req, res) => res.sendFile(path.join(frontend, 'index.html')));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 
-  app.use(notFound);
-  app.use(errorHandler);
-  return app;
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Rate limiter for API routes
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 600, // limit each IP to 600 requests per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests from this IP address. Please try again later.',
+  },
+});
+app.use('/api', apiLimiter);
+
+// ==========================================
+// 2. Static Assets
+// ==========================================
+const frontendDir = path.join(__dirname, '..', 'frontend');
+const uploadsDir = path.join(frontendDir, 'uploads');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-async function start() {
-  if (!process.env.JWT_SECRET) {
-    console.error('✗ JWT_SECRET is not set in .env');
-    process.exit(1);
-  }
-  try {
-    await connectDB();
-  } catch (err) {
-    console.error(`✗ Could not connect to MongoDB: ${err.message}`);
-    console.error('  Make sure MongoDB is running and MONGO_URI in .env is correct.');
-    process.exit(1);
-  }
+app.use(express.static(frontendDir));
+app.use('/uploads', express.static(uploadsDir));
 
-  // Hosted deployments (e.g. Render) have no shell to run `npm run seed`:
-  // with AUTO_SEED=true the demo data is loaded once, only if the database is empty.
-  if (process.env.AUTO_SEED === 'true') {
-    const User = require('./models/User');
-    if ((await User.estimatedDocumentCount()) === 0) {
-      console.log('Empty database — loading demo data (AUTO_SEED=true)…');
-      await require('./seed/seed').seedDatabase();
-    }
-  }
+// Root route explicitly serves index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(frontendDir, 'index.html'));
+});
 
-  const app = createApp();
-  const port = Number(process.env.PORT) || 5000;
-  app.listen(port, () => {
-    console.log(`✓ SmartLib running at http://localhost:${port}`);
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
   });
+});
 
-  // Overdue detection, reminders, membership & reservation expiry
-  const tick = () => runMaintenance().catch((e) => console.error('Maintenance error:', e.message));
-  tick();
-  setInterval(tick, 60 * 60 * 1000);
+// ==========================================
+// 3. API Routes Mounting
+// ==========================================
+const apiRouter = express.Router();
+
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/books', booksRoutes);
+apiRouter.use('/categories', categoriesRoutes);
+apiRouter.use('/shelves', shelvesRoutes);
+apiRouter.use('/members', membersRoutes);
+apiRouter.use('/loans', loansRoutes);
+apiRouter.use('/issues', loansRoutes); // Route alias for issues -> loans
+apiRouter.use('/reservations', reservationsRoutes);
+apiRouter.use('/fines', finesRoutes);
+apiRouter.use('/reviews', reviewsRoutes);
+apiRouter.use('/notifications', notificationsRoutes);
+apiRouter.use('/activity', activityRoutes);
+apiRouter.use('/stats', statsRoutes);
+apiRouter.use('/search', searchRoutes);
+apiRouter.use('/upload', uploadRoutes);
+
+// Mount under /api/v1/ as requested
+app.use('/api/v1', apiRouter);
+
+// Also mount under /api for seamless frontend client compatibility
+app.use('/api', apiRouter);
+
+// 404 handler for unrecognized /api routes
+app.all('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `API endpoint not found: ${req.method} ${req.originalUrl}`,
+  });
+});
+
+// Fallback for HTML page navigation (e.g. books.html, members.html, etc.)
+app.get('*', (req, res, next) => {
+  const filePath = path.join(frontendDir, req.path);
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    return res.sendFile(filePath);
+  }
+  res.sendFile(path.join(frontendDir, 'index.html'));
+});
+
+// ==========================================
+// 4. Centralized Error Handler
+// ==========================================
+app.use(errorHandler);
+
+// ==========================================
+// 5. Database Connection & Server Startup
+// ==========================================
+async function startServer() {
+  try {
+    console.log('Connecting to databases...');
+
+    // Connect to MySQL
+    try {
+      await testConnection();
+    } catch (err) {
+      console.warn('⚠️  MySQL Connection Note:', err.message);
+      console.warn('   (Ensure MySQL is running on port 3306 with the password specified in .env)');
+    }
+
+    // Connect to MongoDB
+    try {
+      await connectMongoDB();
+    } catch (err) {
+      console.warn('⚠️  MongoDB Connection Note:', err.message);
+      console.warn('   (Ensure MongoDB is running on port 27017 or MONGODB_URI in .env is configured)');
+    }
+
+    // Start Express server
+    const server = app.listen(PORT, () => {
+      console.log('====================================================');
+      console.log(`  SMARTLIB Library Management System Backend Running`);
+      console.log(`  Port:             ${PORT}`);
+      console.log(`  Frontend URL:     http://localhost:${PORT}`);
+      console.log(`  API v1 Base URL:  http://localhost:${PORT}/api/v1`);
+      console.log(`  Environment:      ${process.env.NODE_ENV || 'development'}`);
+      console.log('====================================================');
+    });
+
+    // Graceful shutdown handling
+    const gracefulShutdown = (signal) => {
+      console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+      server.close(async () => {
+        console.log('HTTP server closed.');
+        try {
+          await mongoose.connection.close();
+          console.log('MongoDB connection closed.');
+          await pool.end();
+          console.log('MySQL connection pool closed.');
+          console.log('SMARTLIB shutdown complete.');
+          process.exit(0);
+        } catch (err) {
+          console.error('Error during database teardown:', err.message);
+          process.exit(1);
+        }
+      });
+
+      // Force close after 10s if graceful shutdown hangs
+      setTimeout(() => {
+        console.error('Shutdown timed out. Forcing process exit.');
+        process.exit(1);
+      }, 10000);
+    };
+
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  } catch (error) {
+    console.error('Critical failure during server startup:', error.message);
+    process.exit(1);
+  }
 }
 
-if (require.main === module) start();
+if (require.main === module) startServer();
 
-module.exports = { createApp };
+module.exports = app;
