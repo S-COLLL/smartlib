@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Editor · SMARTLIB</title>
+  <meta name="description" content="SMARTLIB Library Management System - Create and Update Member Accounts">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .member-form-card {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Dynamic Sidebar -->
+    <aside id="sidebar"></aside>
+
+    <!-- Top Header -->
+    <header id="top-header"></header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Breadcrumb -->
+      <nav aria-label="Breadcrumb">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/pages/admin-dashboard.html">SMARTLIB</a></li>
+          <li class="breadcrumb-item"><a href="/pages/members.html">Members</a></li>
+          <li class="breadcrumb-item active" id="form-breadcrumb-title" aria-current="page">Add Member</li>
+        </ul>
+      </nav>
+
+      <!-- Page Header -->
+      <header class="page-header" style="max-width: 680px; margin: 0 auto var(--space-8) auto;">
+        <div class="page-title-group">
+          <h1 class="page-title" id="member-page-title">Add New Member</h1>
+          <p class="page-subtitle" id="member-page-subtitle">Register a new reader or student account with automated library privileges.</p>
+        </div>
+        <div class="page-actions">
+          <a href="/pages/members.html" class="btn btn-secondary btn-sm">
+            &larr; Back to Members
+          </a>
+        </div>
+      </header>
+
+      <!-- Member Form Card -->
+      <div class="card member-form-card p-8">
+        <form id="member-edit-form" novalidate>
+          <!-- Full Name -->
+          <div class="form-group">
+            <label class="form-label" for="member-name">
+              Full Name <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <span class="input-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <input type="text" class="form-control" id="member-name" name="name" required placeholder="e.g. Eleanor Vance" />
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="member-email">
+              Email Address <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <span class="input-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              </span>
+              <input type="email" class="form-control" id="member-email" name="email" required placeholder="eleanor.vance@university.edu" />
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group">
+            <label class="form-label" for="member-phone">Phone Number</label>
+            <div class="input-with-icon">
+              <span class="input-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </span>
+              <input type="tel" class="form-control" id="member-phone" name="phone" placeholder="+1 (555) 019-2834" />
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="form-group">
+            <label class="form-label" for="member-address">Address</label>
+            <textarea class="form-textarea" id="member-address" name="address" rows="3" placeholder="Department, Hall of Residence, or Residential Postal Address..."></textarea>
+          </div>
+
+          <!-- Edit-only fields: Membership Status and Membership Number Display -->
+          <div id="edit-mode-fields" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+              <div class="form-group">
+                <label class="form-label" for="member-status">Membership Status</label>
+                <select class="form-select" id="member-status" name="membership_status">
+                  <option value="ACTIVE">Active</option>
+                  <option value="SUSPENDED">Suspended</option>
+                  <option value="EXPIRED">Expired</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Membership Number</label>
+                <input type="text" class="form-control font-mono" id="member-number-display" readonly style="background-color: var(--bg-alt);" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Create-only fields: Password -->
+          <div id="create-mode-fields">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+              <div class="form-group">
+                <label class="form-label" for="member-password">
+                  Initial Password <span class="required">*</span>
+                </label>
+                <input type="password" class="form-control" id="member-password" name="password" minlength="6" placeholder="At least 6 characters" autocomplete="new-password" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="member-confirm-password">
+                  Confirm Password <span class="required">*</span>
+                </label>
+                <input type="password" class="form-control" id="member-confirm-password" name="confirm_password" placeholder="Repeat password" autocomplete="new-password" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex-align-center gap-3 mt-6 pt-4" style="border-top: 1px solid var(--border-light);">
+            <button type="submit" class="btn btn-primary btn-md flex-1" id="save-member-btn">
+              <span id="save-member-btn-text">Register Member</span>
+            </button>
+            <a href="/pages/members.html" class="btn btn-secondary btn-md">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules in strict order -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Role Protection Guard
+      if (!window.auth || !window.auth.requireAuth(['admin', 'librarian'])) {
+        return;
+      }
+
+      // 2. Navigation Init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      // 3. Inspect Edit Mode
+      const urlParams = new URLSearchParams(window.location.search);
+      const memberId = urlParams.get('id');
+      const isEdit = !!memberId;
+
+      // DOM Elements
+      const pageTitle = document.getElementById('member-page-title');
+      const pageSubtitle = document.getElementById('member-page-subtitle');
+      const breadcrumbTitle = document.getElementById('form-breadcrumb-title');
+      const form = document.getElementById('member-edit-form');
+      const saveBtn = document.getElementById('save-member-btn');
+      const saveBtnText = document.getElementById('save-member-btn-text');
+
+      const nameInput = document.getElementById('member-name');
+      const emailInput = document.getElementById('member-email');
+      const phoneInput = document.getElementById('member-phone');
+      const addressInput = document.getElementById('member-address');
+      const statusSelect = document.getElementById('member-status');
+      const numberDisplay = document.getElementById('member-number-display');
+
+      const passwordInput = document.getElementById('member-password');
+      const confirmPasswordInput = document.getElementById('member-confirm-password');
+
+      const editFields = document.getElementById('edit-mode-fields');
+      const createFields = document.getElementById('create-mode-fields');
+
+      if (isEdit) {
+        pageTitle.textContent = 'Edit Member Profile';
+        pageSubtitle.textContent = 'Update contact information, residential address, or membership status.';
+        breadcrumbTitle.textContent = 'Edit Member';
+        saveBtnText.textContent = 'Update Member';
+        editFields.style.display = 'block';
+        createFields.style.display = 'none';
+
+        // Load existing member data
+        await loadMemberData(memberId);
+      } else {
+        editFields.style.display = 'none';
+        createFields.style.display = 'block';
+      }
+
+      // 4. Fetch Member for Edit
+      async function loadMemberData(id) {
+        try {
+          saveBtn.disabled = true;
+          const res = await window.api.get(`/members/${id}`);
+          const m = (res && res.data) ? res.data : (res || {});
+
+          nameInput.value = m.name || '';
+          emailInput.value = m.email || '';
+          phoneInput.value = m.phone || '';
+          addressInput.value = m.address || '';
+          numberDisplay.value = m.membership_number || 'Auto-generated';
+
+          const st = (m.membership_status || m.status || 'ACTIVE').toUpperCase();
+          if (statusSelect) statusSelect.value = st;
+        } catch (err) {
+          console.error('Failed to load member for editing:', err);
+          if (window.toast) window.toast.error(err.message || 'Member account not found');
+          setTimeout(() => { window.location.href = '/pages/members.html'; }, 1500);
+        } finally {
+          saveBtn.disabled = false;
+        }
+      }
+
+      // 5. Submit Handler
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Rules
+        const rules = {
+          name: { required: true, minLength: 2, requiredMessage: 'Full name is required' },
+          email: { required: true, email: true, requiredMessage: 'Valid email is required' }
+        };
+
+        if (phoneInput.value.trim()) {
+          rules.phone = { phone: true, phoneMessage: 'Please enter a valid telephone format' };
+        }
+
+        if (!isEdit) {
+          rules.password = { required: true, minLength: 6, requiredMessage: 'Password must be at least 6 characters' };
+          rules.confirm_password = { required: true, match: 'password', matchMessage: 'Passwords do not match' };
+        }
+
+        if (window.validate) {
+          const isValid = window.validate.validateForm(form, rules);
+          if (!isValid) return;
+        }
+
+        const payload = {
+          name: nameInput.value.trim(),
+          email: emailInput.value.trim(),
+          phone: phoneInput.value.trim() || null,
+          address: addressInput.value.trim() || null
+        };
+
+        if (isEdit) {
+          payload.membership_status = statusSelect.value;
+        } else {
+          payload.password = passwordInput.value;
+        }
+
+        try {
+          saveBtn.disabled = true;
+          saveBtn.classList.add('loading');
+
+          if (isEdit) {
+            await window.api.put(`/members/${memberId}`, payload);
+            if (window.toast) window.toast.success('Member profile updated successfully!');
+          } else {
+            await window.api.post('/members', payload);
+            if (window.toast) window.toast.success('Member created successfully!');
+          }
+
+          setTimeout(() => {
+            window.location.href = '/pages/members.html';
+          }, 800);
+        } catch (err) {
+          console.error('Member submission error:', err);
+          saveBtn.disabled = false;
+          saveBtn.classList.remove('loading');
+
+          if (window.toast) {
+            window.toast.error(err.message || 'Failed to save member account');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

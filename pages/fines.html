@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fine Management · SMARTLIB</title>
+  <meta name="description" content="SMARTLIB Library Management System - Fine Assessment, Payment Processing and Waivers">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .fines-stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-5);
+      margin-bottom: var(--space-8);
+    }
+    @media (max-width: 900px) {
+      .fines-stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 500px) {
+      .fines-stats-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    .filter-bar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-4) var(--space-6);
+      margin-bottom: var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Dynamic Sidebar -->
+    <aside id="sidebar"></aside>
+
+    <!-- Top Header -->
+    <header id="top-header"></header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Breadcrumb -->
+      <nav aria-label="Breadcrumb">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/pages/admin-dashboard.html">SMARTLIB</a></li>
+          <li class="breadcrumb-item">Circulation</li>
+          <li class="breadcrumb-item active" aria-current="page">Fines Management</li>
+        </ul>
+      </nav>
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="page-title-group">
+          <h1 class="page-title">Fine Management</h1>
+          <p class="page-subtitle">Track overdue penalties, record cash or digital payments, and process administrative waivers.</p>
+        </div>
+      </header>
+
+      <!-- Fines Stats Row -->
+      <section class="fines-stats-row">
+        <!-- Total Assessed -->
+        <div class="stat-card card-3d">
+          <div class="stat-icon primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"/><path d="M16 8h-8"/><path d="M16 12h-8"/><path d="M12 16H8"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="stats-total-assessed">Rs. 0</span>
+            <span class="stat-label">Total Assessed</span>
+          </div>
+        </div>
+
+        <!-- Total Collected -->
+        <div class="stat-card card-3d">
+          <div class="stat-icon success">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value text-success" id="stats-total-collected">Rs. 0</span>
+            <span class="stat-label">Total Collected</span>
+          </div>
+        </div>
+
+        <!-- Total Outstanding -->
+        <div class="stat-card card-3d">
+          <div class="stat-icon danger">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value text-danger" id="stats-total-outstanding">Rs. 0</span>
+            <span class="stat-label">Outstanding Balance</span>
+          </div>
+        </div>
+
+        <!-- Members with Fines -->
+        <div class="stat-card card-3d">
+          <div class="stat-icon warning">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="stats-members-with-fines">0</span>
+            <span class="stat-label">Members with Fines</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filter Bar -->
+      <section class="filter-bar-card">
+        <div class="flex-align-center gap-3 flex-wrap flex-1">
+          <div class="search-bar" style="max-width: 380px;">
+            <span class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <input type="text" class="form-control" id="fines-search-input" placeholder="Search by member name, membership #, or book..." />
+          </div>
+
+          <div style="min-width: 170px;">
+            <select class="form-select" id="fines-status-filter">
+              <option value="">All Statuses</option>
+              <option value="UNPAID">Unpaid</option>
+              <option value="PARTIAL">Partially Paid</option>
+              <option value="PAID">Paid</option>
+              <option value="WAIVED">Waived</option>
+            </select>
+          </div>
+
+          <button class="btn btn-ghost btn-sm" id="reset-fines-filters-btn">
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <span class="badge badge-secondary" id="total-fines-counter">Loading...</span>
+      </section>
+
+      <!-- Fines Table -->
+      <section class="card">
+        <div class="table-container" style="border: none; margin-bottom: 0;">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Fine ID</th>
+                <th>Member</th>
+                <th>Book Title</th>
+                <th>Assessed Amount</th>
+                <th>Paid Amount</th>
+                <th>Remaining</th>
+                <th>Status</th>
+                <th>Assessed Date</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fines-table-body">
+              <tr><td colspan="9"><div class="skeleton skeleton-text py-2"></div></td></tr>
+              <tr><td colspan="9"><div class="skeleton skeleton-text py-2"></div></td></tr>
+              <tr><td colspan="9"><div class="skeleton skeleton-text py-2"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="fines-empty-state" class="empty-state" style="display: none; border: none; padding: var(--space-10) var(--space-6);">
+          <div class="empty-state-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"/><path d="M16 8h-8"/><path d="M16 12h-8"/><path d="M12 16H8"/></svg>
+          </div>
+          <h3 class="empty-state-title">No Fine Records Found</h3>
+          <p class="empty-state-desc">There are no library penalties matching the selected status or member search.</p>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="card-footer flex-between flex-wrap gap-3" id="pagination-wrapper" style="display: none;">
+          <span class="text-xs text-secondary" id="pagination-summary">Showing 0 of 0</span>
+          <div id="pagination-controls"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules in strict order -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Role Protection Guard
+      if (!window.auth || !window.auth.requireAuth(['admin', 'librarian'])) {
+        return;
+      }
+
+      // 2. Navigation Init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      // 3. State
+      let currentPage = 1;
+      const limit = 10;
+      let totalPages = 1;
+      let totalCount = 0;
+      let searchTimer = null;
+      let finesList = [];
+
+      // Elements
+      const searchInput = document.getElementById('fines-search-input');
+      const statusFilter = document.getElementById('fines-status-filter');
+      const resetBtn = document.getElementById('reset-fines-filters-btn');
+      const tbody = document.getElementById('fines-table-body');
+      const emptyState = document.getElementById('fines-empty-state');
+      const counterBadge = document.getElementById('total-fines-counter');
+      const paginationWrapper = document.getElementById('pagination-wrapper');
+      const paginationControls = document.getElementById('pagination-controls');
+      const paginationSummary = document.getElementById('pagination-summary');
+
+      // 4. Load Stats
+      async function loadFineStats() {
+        try {
+          const res = await window.api.get('/fines/stats');
+          const s = (res && res.data) ? res.data : (res || {});
+          const fmt = window.format || { currency: n => `Rs. ${Number(n||0).toFixed(2)}` };
+
+          document.getElementById('stats-total-assessed').textContent = fmt.currency(s.totalAssessed || s.total_fines || 0);
+          document.getElementById('stats-total-collected').textContent = fmt.currency(s.totalCollected || s.paid_fines || 0);
+          document.getElementById('stats-total-outstanding').textContent = fmt.currency(s.totalOutstanding || s.unpaid_fines || 0);
+          document.getElementById('stats-members-with-fines').textContent = s.membersWithFines || s.members_count || 0;
+        } catch (e) {
+          console.warn('Failed to load fine stats:', e);
+        }
+      }
+
+      // 5. Fetch Fines Table
+      async function fetchFines(page = 1) {
+        currentPage = page;
+        renderSkeletons();
+
+        try {
+          const params = {
+            page: currentPage,
+            limit: limit,
+            search: searchInput.value.trim(),
+            status: statusFilter.value
+          };
+
+          const res = await window.api.get('/fines', params);
+          const data = (res && res.data) ? res.data : (res || {});
+          const fines = Array.isArray(data.fines) ? data.fines : (Array.isArray(data) ? data : []);
+          finesList = fines;
+
+          const pag = data.pagination || {};
+          totalPages = Number(pag.totalPages || pag.pages || 1);
+          totalCount = Number(pag.total || pag.totalCount || fines.length);
+
+          renderFinesTable(fines);
+          renderPaginationUI();
+        } catch (err) {
+          console.error('Failed to load fines:', err);
+          tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-5">Error: ${err.message || 'Failed to fetch fine records'}</td></tr>`;
+          if (window.toast) window.toast.error(err.message || 'Failed to load fines');
+        }
+      }
+
+      function renderSkeletons() {
+        emptyState.style.display = 'none';
+        let html = '';
+        for (let i = 0; i < 5; i++) {
+          html += `
+            <tr>
+              <td><div class="skeleton skeleton-text font-mono" style="width: 70px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 140px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 160px;"></div></td>
+              <td><div class="skeleton skeleton-text font-bold" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 70px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 100px; margin-left: auto;"></div></td>
+            </tr>
+          `;
+        }
+        tbody.innerHTML = html;
+      }
+
+      // 6. Render Fines Table
+      function renderFinesTable(fines) {
+        if (!fines.length) {
+          tbody.innerHTML = '';
+          emptyState.style.display = 'block';
+          paginationWrapper.style.display = 'none';
+          counterBadge.textContent = '0 Records';
+          return;
+        }
+
+        emptyState.style.display = 'none';
+        paginationWrapper.style.display = 'flex';
+        counterBadge.textContent = `${totalCount} Fine Record${totalCount === 1 ? '' : 's'}`;
+
+        const fmt = window.format || {
+          currency: n => 'Rs. ' + Number(n||0).toFixed(2),
+          date: d => d ? new Date(d).toLocaleDateString() : '—',
+          statusBadge: s => `<span class="badge">${s}</span>`
+        };
+
+        let html = '';
+        fines.forEach(f => {
+          const id = f.fine_id || f.id || f._id;
+          const memberName = f.member_name || (f.user && f.user.name) || 'Member';
+          const memNum = f.membership_number ? `<span class="text-xs font-mono text-muted d-block">(${f.membership_number})</span>` : '';
+          const bookTitle = f.title || (f.loan && f.loan.title) || 'Overdue item';
+          const amount = Number(f.amount || 0);
+          const paid = Number(f.paid_amount || 0);
+          const remaining = Math.max(0, amount - paid);
+          const status = (f.status || (remaining === 0 ? 'PAID' : 'UNPAID')).toUpperCase();
+          const assessedDate = fmt.date(f.assessed_at || f.created_at);
+
+          const statusBadge = fmt.statusBadge(status);
+          const canPay = (status === 'UNPAID' || status === 'PARTIAL') && remaining > 0;
+          const canWaive = (status === 'UNPAID' || status === 'PARTIAL') && window.auth.isAdmin();
+
+          html += `
+            <tr data-fine-id="${id}">
+              <td class="font-mono text-xs font-bold text-primary">#FN-${id}</td>
+              <td>
+                <span class="font-semibold text-sm" style="color: var(--text);">${memberName}</span>
+                ${memNum}
+              </td>
+              <td><span class="text-xs text-truncate d-block" style="max-width: 200px;" title="${bookTitle}">${bookTitle}</span></td>
+              <td class="font-mono text-sm font-bold">${fmt.currency(amount)}</td>
+              <td class="font-mono text-sm text-success">${fmt.currency(paid)}</td>
+              <td class="font-mono text-sm font-bold ${remaining > 0 ? 'text-danger' : 'text-muted'}">${fmt.currency(remaining)}</td>
+              <td>${statusBadge}</td>
+              <td class="text-xs font-mono">${assessedDate}</td>
+              <td style="text-align: right;">
+                <div class="table-actions" style="justify-content: flex-end;">
+                  ${canPay ? `
+                    <button class="btn btn-success btn-sm record-pay-btn" data-id="${id}" title="Record Payment">
+                      Record Payment
+                    </button>
+                  ` : ''}
+                  ${canWaive ? `
+                    <button class="btn btn-ghost btn-sm waive-fine-btn" data-id="${id}" style="color: var(--warning-dark);" title="Waive Fine">
+                      Waive
+                    </button>
+                  ` : ''}
+                  ${(!canPay && !canWaive) ? `<span class="text-xs text-muted">Settled</span>` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = html;
+        bindFineActions();
+      }
+
+      // 7. Bind Payment and Waive Actions
+      function bindFineActions() {
+        // Record Payment Modal
+        tbody.querySelectorAll('.record-pay-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const fine = finesList.find(f => String(f.fine_id || f.id || f._id) === String(id));
+            if (fine) openPaymentModal(fine);
+          });
+        });
+
+        // Waive Fine Action
+        tbody.querySelectorAll('.waive-fine-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            const fine = finesList.find(f => String(f.fine_id || f.id || f._id) === String(id));
+            if (!fine || !window.modal) return;
+
+            const remaining = Math.max(0, Number(fine.amount || 0) - Number(fine.paid_amount || 0));
+            const memberName = fine.member_name || 'Member';
+
+            const confirmed = await window.modal.confirm(
+              'Waive Fine Penalty',
+              `Are you sure you want to administratively waive this fine balance of <strong>Rs. ${remaining.toFixed(2)}</strong> for member <strong>${memberName}</strong>? This decision cannot be reversed.`,
+              { confirmClass: 'btn-warning', confirmText: 'Yes, Waive Fine' }
+            );
+
+            if (confirmed) {
+              try {
+                await window.api.put(`/fines/${id}/waive`);
+                if (window.toast) window.toast.success(`Fine #FN-${id} waived successfully`);
+                fetchFines(currentPage);
+                loadFineStats();
+              } catch (err) {
+                console.error('Waive fine error:', err);
+                if (window.toast) window.toast.error(err.message || 'Failed to waive fine');
+              }
+            }
+          });
+        });
+      }
+
+      // 8. Record Payment Modal
+      function openPaymentModal(fine) {
+        if (!window.modal) return;
+        const id = fine.fine_id || fine.id || fine._id;
+        const amount = Number(fine.amount || 0);
+        const paid = Number(fine.paid_amount || 0);
+        const remaining = Math.max(0, amount - paid);
+        const member = fine.member_name || 'Member';
+        const book = fine.title || 'Overdue item';
+
+        const content = `
+          <div class="mb-4 pb-3" style="border-bottom: 1px solid var(--border-light);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); font-size: var(--text-xs); background: var(--bg-alt); padding: var(--space-3); border-radius: var(--radius-md);">
+              <div><span class="text-muted">Member:</span> <strong>${member}</strong></div>
+              <div><span class="text-muted">Fine ID:</span> <span class="font-mono">#FN-${id}</span></div>
+              <div style="grid-column: span 2;"><span class="text-muted">Book Title:</span> <span>${book}</span></div>
+              <div><span class="text-muted">Assessed:</span> <span>Rs. ${amount.toFixed(2)}</span></div>
+              <div><span class="text-muted">Remaining Balance:</span> <strong class="text-danger">Rs. ${remaining.toFixed(2)}</strong></div>
+            </div>
+          </div>
+
+          <form id="payment-modal-form" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="pay-amount-input">Payment Amount (Rs.) <span class="required">*</span></label>
+              <input type="number" class="form-control font-mono font-bold" id="pay-amount-input" step="0.5" min="1" max="${remaining}" value="${remaining}" required />
+              <span class="form-hint">Enter full or partial payment amount</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="pay-method-select">Payment Method <span class="required">*</span></label>
+              <select class="form-select" id="pay-method-select" required>
+                <option value="Cash" selected>Cash at Desk</option>
+                <option value="UPI">UPI / QR Code</option>
+                <option value="Card">Debit / Credit Card</option>
+                <option value="NetBanking">Net Banking</option>
+              </select>
+            </div>
+
+            <div class="form-group mb-0">
+              <label class="form-label" for="pay-notes-input">Payment Reference / Notes</label>
+              <input type="text" class="form-control text-xs" id="pay-notes-input" placeholder="e.g. UPI Ref #98721634, or Cash Receipt #102" />
+            </div>
+          </form>
+        `;
+
+        window.modal.open({
+          title: 'Record Fine Payment',
+          content: content,
+          size: 'md',
+          confirmText: 'Process Payment',
+          confirmClass: 'btn-success',
+          onConfirm: () => {
+            const payInput = document.getElementById('pay-amount-input');
+            const payAmount = parseFloat(payInput.value);
+            const method = document.getElementById('pay-method-select').value;
+            const notes = document.getElementById('pay-notes-input').value.trim();
+
+            if (isNaN(payAmount) || payAmount <= 0) {
+              if (window.toast) window.toast.error('Please enter a valid payment amount');
+              return false;
+            }
+
+            if (payAmount > remaining) {
+              if (window.toast) window.toast.error(`Payment cannot exceed remaining fine balance of Rs. ${remaining.toFixed(2)}`);
+              return false;
+            }
+
+            (async () => {
+              try {
+                await window.api.post(`/fines/${id}/pay`, {
+                  amount: payAmount,
+                  payment_method: method,
+                  notes: notes || undefined
+                });
+                if (window.toast) window.toast.success(`Payment of Rs. ${payAmount.toFixed(2)} recorded successfully!`);
+                fetchFines(currentPage);
+                loadFineStats();
+              } catch (err) {
+                console.error('Payment processing failed:', err);
+                if (window.toast) window.toast.error(err.message || 'Payment processing failed');
+              }
+            })();
+
+            return true;
+          }
+        });
+      }
+
+      // 9. Pagination UI
+      function renderPaginationUI() {
+        const startItem = totalCount === 0 ? 0 : ((currentPage - 1) * limit) + 1;
+        const endItem = Math.min(currentPage * limit, totalCount);
+        paginationSummary.textContent = `Showing ${startItem}–${endItem} of ${totalCount} records`;
+
+        if (window.pagination) {
+          window.pagination.render(paginationControls, {
+            currentPage: currentPage,
+            totalPages: totalPages,
+            onPageChange: (newPage) => {
+              fetchFines(newPage);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          });
+        }
+      }
+
+      // 10. Filter Handlers
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          fetchFines(1);
+        }, 350);
+      });
+
+      statusFilter.addEventListener('change', () => fetchFines(1));
+
+      resetBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        statusFilter.value = '';
+        fetchFines(1);
+      });
+
+      // 11. Initial Load
+      loadFineStats();
+      fetchFines(1);
+    });
+  </script>
+</body>
+</html>

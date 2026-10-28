@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activity &amp; Audit Logs · SMARTLIB</title>
+  <meta name="description" content="SMARTLIB Library Management System - System Audit Trails and Activity Logs">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .filter-bar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-4) var(--space-6);
+      margin-bottom: var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+    .timeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: relative;
+    }
+    .timeline-container::before {
+      content: "";
+      position: absolute;
+      top: 20px;
+      bottom: 20px;
+      left: 23px;
+      width: 2px;
+      background: var(--border-light);
+      z-index: 0;
+    }
+    .audit-entry-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5) var(--space-6);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      position: relative;
+      z-index: 1;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .audit-entry-card:hover {
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-200);
+    }
+    .audit-icon-badge {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .metadata-pre {
+      background: var(--bg-alt);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: 0.725rem;
+      color: var(--text);
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: var(--space-3);
+      display: none;
+    }
+    .metadata-pre.open {
+      display: block;
+      animation: slide-up 0.2s ease-out;
+    }
+    .live-pulse {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--success);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse-ring 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse-ring {
+      to {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside id="sidebar"></aside>
+
+    <!-- Top Header -->
+    <header id="top-header"></header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Breadcrumb -->
+      <nav aria-label="Breadcrumb">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/pages/admin-dashboard.html">SMARTLIB</a></li>
+          <li class="breadcrumb-item">System</li>
+          <li class="breadcrumb-item active" aria-current="page">Activity Logs</li>
+        </ul>
+      </nav>
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="page-title-group">
+          <div class="flex-align-center gap-2 mb-1">
+            <h1 class="page-title">Activity &amp; Audit Logs</h1>
+            <span class="badge badge-success flex-align-center gap-2" style="font-size: 0.7rem;">
+              <span class="live-pulse"></span>
+              Live (30s)
+            </span>
+          </div>
+          <p class="page-subtitle">Security audit trails, staff operations, catalogue changes, and member circulation events.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary btn-sm" id="manual-refresh-btn" title="Refresh logs now">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+            <span>Refresh Now</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Filter Bar -->
+      <section class="filter-bar-card">
+        <div class="flex-align-center gap-3 flex-wrap flex-1">
+          <!-- Actor Search -->
+          <div class="search-bar" style="max-width: 280px;">
+            <span class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <input type="text" class="form-control" id="actor-search-input" placeholder="Search actor name or ID..." />
+          </div>
+
+          <!-- Action Type Filter -->
+          <div style="min-width: 170px;">
+            <select class="form-select" id="action-type-filter">
+              <option value="">All Actions</option>
+              <option value="login">User Login</option>
+              <option value="book_create">Book Created</option>
+              <option value="book_update">Book Updated</option>
+              <option value="book_delete">Book Deleted</option>
+              <option value="loan_issue">Loan Issued</option>
+              <option value="loan_return">Loan Returned</option>
+              <option value="fine_pay">Fine Paid</option>
+              <option value="fine_waive">Fine Waived</option>
+              <option value="member_create">Member Registered</option>
+              <option value="member_status_change">Member Status Changed</option>
+            </select>
+          </div>
+
+          <!-- Entity Type Filter -->
+          <div style="min-width: 150px;">
+            <select class="form-select" id="entity-type-filter">
+              <option value="">All Entities</option>
+              <option value="book">Book</option>
+              <option value="loan">Loan</option>
+              <option value="member">Member</option>
+              <option value="shelf">Shelf</option>
+              <option value="fine">Fine</option>
+              <option value="user">User</option>
+            </select>
+          </div>
+
+          <button class="btn btn-ghost btn-sm" id="reset-activity-filters-btn">
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <span class="badge badge-secondary" id="total-logs-counter">Loading...</span>
+      </section>
+
+      <!-- Timeline Logs Container -->
+      <div id="activity-loading-skeleton" class="flex-col gap-4">
+        <div class="skeleton" style="height: 90px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 90px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 90px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 90px; border-radius: var(--radius-xl);"></div>
+      </div>
+
+      <div class="timeline-container" id="activity-timeline-container" style="display: none;">
+        <!-- Injected Audit Cards -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="activity-empty-state" class="empty-state" style="display: none; margin-top: var(--space-6);">
+        <div class="empty-state-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3 class="empty-state-title">No Audit Logs Found</h3>
+        <p class="empty-state-desc">There are no recorded system operations matching the selected filters.</p>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="flex-between flex-wrap gap-3 mt-8" id="pagination-wrapper" style="display: none;">
+        <span class="text-xs text-secondary" id="pagination-summary">Showing 0 of 0</span>
+        <div id="pagination-controls"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules in strict order -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Role Protection Guard (Admin / Librarian)
+      if (!window.auth || !window.auth.requireAuth(['admin', 'librarian'])) {
+        return;
+      }
+
+      // 2. Navigation Init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      // 3. State
+      let currentPage = 1;
+      const limit = 15;
+      let totalPages = 1;
+      let totalCount = 0;
+      let searchTimer = null;
+      let autoRefreshInterval = null;
+
+      // Elements
+      const skeleton = document.getElementById('activity-loading-skeleton');
+      const container = document.getElementById('activity-timeline-container');
+      const emptyState = document.getElementById('activity-empty-state');
+      const counterBadge = document.getElementById('total-logs-counter');
+      const actorSearch = document.getElementById('actor-search-input');
+      const actionFilter = document.getElementById('action-type-filter');
+      const entityFilter = document.getElementById('entity-type-filter');
+      const resetBtn = document.getElementById('reset-activity-filters-btn');
+      const manualRefreshBtn = document.getElementById('manual-refresh-btn');
+      const paginationWrapper = document.getElementById('pagination-wrapper');
+      const paginationControls = document.getElementById('pagination-controls');
+      const paginationSummary = document.getElementById('pagination-summary');
+
+      // 4. Fetch Logs
+      async function fetchActivityLogs(page = 1, isSilent = false) {
+        currentPage = page;
+
+        if (!isSilent) {
+          skeleton.style.display = 'flex';
+          container.style.display = 'none';
+          emptyState.style.display = 'none';
+        }
+
+        try {
+          const params = {
+            page: currentPage,
+            limit: limit,
+            search: actorSearch.value.trim(),
+            action: actionFilter.value,
+            entity: entityFilter.value
+          };
+
+          const res = await window.api.get('/activity', params);
+          const data = (res && res.data) ? res.data : (res || {});
+          const logs = Array.isArray(data.logs) ? data.logs : (Array.isArray(data) ? data : []);
+
+          const pag = data.pagination || {};
+          totalPages = Number(pag.totalPages || pag.pages || 1);
+          totalCount = Number(pag.total || pag.totalCount || logs.length);
+
+          renderLogs(logs);
+          renderPaginationUI();
+        } catch (err) {
+          console.error('Failed to load activity logs:', err);
+          if (!isSilent) {
+            skeleton.style.display = 'none';
+            emptyState.style.display = 'block';
+            if (window.toast) window.toast.error(err.message || 'Failed to fetch activity logs');
+          }
+        } finally {
+          skeleton.style.display = 'none';
+        }
+      }
+
+      // 5. Render Timeline Log Items
+      function renderLogs(logs) {
+        if (!logs.length) {
+          container.style.display = 'none';
+          emptyState.style.display = 'block';
+          paginationWrapper.style.display = 'none';
+          counterBadge.textContent = '0 Logs';
+          return;
+        }
+
+        emptyState.style.display = 'none';
+        container.style.display = 'flex';
+        paginationWrapper.style.display = 'flex';
+        counterBadge.textContent = `${totalCount} Audit Records`;
+
+        const fmt = window.format || {
+          relativeTime: d => d ? new Date(d).toLocaleTimeString() : 'recently',
+          dateTime: d => d ? new Date(d).toLocaleString() : '—'
+        };
+
+        const actionConfig = {
+          login: { icon: 'user', color: 'info', label: 'User Login' },
+          book_create: { icon: 'plus', color: 'primary', label: 'Book Added' },
+          book_update: { icon: 'edit', color: 'info', label: 'Book Updated' },
+          book_delete: { icon: 'trash', color: 'danger', label: 'Book Deleted' },
+          loan_issue: { icon: 'barcode', color: 'success', label: 'Book Issued' },
+          loan_return: { icon: 'check', color: 'success', label: 'Book Returned' },
+          fine_pay: { icon: 'receipt', color: 'warning', label: 'Fine Collected' },
+          fine_waive: { icon: 'receipt', color: 'secondary', label: 'Fine Waived' },
+          member_create: { icon: 'users', color: 'primary', label: 'Member Created' },
+          member_status_change: { icon: 'alert', color: 'warning', label: 'Status Changed' },
+          default: { icon: 'activity', color: 'secondary', label: 'System Event' }
+        };
+
+        let html = '';
+        logs.forEach((log, index) => {
+          const action = log.action || 'system_event';
+          const conf = actionConfig[action] || actionConfig.default;
+          const actor = log.actorName || (log.user && log.user.name) || 'System';
+          const role = (log.actorRole || 'ADMIN').toUpperCase();
+          const desc = log.description || `Executed ${action} operation`;
+          const entityType = log.entityType || log.entity || 'system';
+          const entityId = log.entityId || log.entity_id || '';
+          const relTime = fmt.relativeTime(log.createdAt || log.created_at);
+          const fullTime = fmt.dateTime(log.createdAt || log.created_at);
+          const metadata = log.metadata || log.details || null;
+
+          const iconSvg = (window.navigation && window.navigation.icons[conf.icon]) ?
+            window.navigation.icons[conf.icon] : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`;
+
+          const metaJson = metadata ? JSON.stringify(metadata, null, 2) : '';
+
+          html += `
+            <div class="audit-entry-card" data-log-index="${index}">
+              <div class="audit-icon-badge stat-icon ${conf.color}">
+                ${iconSvg}
+              </div>
+              <div class="flex-col flex-1">
+                <div class="flex-between flex-wrap gap-2">
+                  <div class="flex-align-center gap-2">
+                    <span class="font-bold text-sm" style="color: var(--text);">${actor}</span>
+                    <span class="badge badge-secondary" style="font-size: 0.65rem;">${role}</span>
+                    <span class="badge badge-primary font-mono" style="font-size: 0.65rem;">${entityType}${entityId ? ' #' + entityId : ''}</span>
+                  </div>
+                  <span class="text-xs text-muted tooltip" data-tooltip="${fullTime}">${relTime}</span>
+                </div>
+
+                <p class="text-xs text-secondary mt-1 mb-2 font-medium" style="line-height: 1.5;">${desc}</p>
+
+                ${metadata ? `
+                  <div>
+                    <button class="btn btn-ghost btn-sm toggle-meta-btn" data-target="meta-${index}" style="padding: 2px 6px; font-size: 0.7rem;">
+                      <span>View Payload / Metadata</span>
+                    </button>
+                    <pre class="metadata-pre" id="meta-${index}">${escapeHtml(metaJson)}</pre>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+        bindMetadataToggles();
+      }
+
+      function escapeHtml(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function bindMetadataToggles() {
+        container.querySelectorAll('.toggle-meta-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const pre = document.getElementById(targetId);
+            if (pre) {
+              const isOpen = pre.classList.toggle('open');
+              btn.querySelector('span').textContent = isOpen ? 'Hide Payload / Metadata' : 'View Payload / Metadata';
+            }
+          });
+        });
+      }
+
+      // 6. Pagination UI
+      function renderPaginationUI() {
+        const startItem = totalCount === 0 ? 0 : ((currentPage - 1) * limit) + 1;
+        const endItem = Math.min(currentPage * limit, totalCount);
+        paginationSummary.textContent = `Showing ${startItem}–${endItem} of ${totalCount} records`;
+
+        if (window.pagination) {
+          window.pagination.render(paginationControls, {
+            currentPage: currentPage,
+            totalPages: totalPages,
+            onPageChange: (newPage) => {
+              fetchActivityLogs(newPage);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          });
+        }
+      }
+
+      // 7. Filter & Search Handlers
+      actorSearch.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          fetchActivityLogs(1);
+        }, 350);
+      });
+
+      actionFilter.addEventListener('change', () => fetchActivityLogs(1));
+      entityFilter.addEventListener('change', () => fetchActivityLogs(1));
+
+      resetBtn.addEventListener('click', () => {
+        actorSearch.value = '';
+        actionFilter.value = '';
+        entityFilter.value = '';
+        fetchActivityLogs(1);
+      });
+
+      manualRefreshBtn.addEventListener('click', () => {
+        fetchActivityLogs(currentPage);
+        if (window.toast) window.toast.info('Refreshed audit logs');
+      });
+
+      // 8. Auto-Refresh every 30 seconds
+      autoRefreshInterval = setInterval(() => {
+        // Silent refresh on current page
+        fetchActivityLogs(currentPage, true);
+      }, 30000);
+
+      window.addEventListener('beforeunload', () => {
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+      });
+
+      // Initial Fetch
+      fetchActivityLogs(1);
+    });
+  </script>
+</body>
+</html>

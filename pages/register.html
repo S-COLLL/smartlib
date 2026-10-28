@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account · SMARTLIB</title>
+  <meta name="description" content="Register for your SMARTLIB academic library account to borrow books, track shelf racks, and access digital reservations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .back-home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--accent-light);
+      text-decoration: none;
+      font-size: var(--text-sm);
+      margin-bottom: var(--space-4);
+      transition: color var(--transition-fast);
+    }
+    .back-home-link:hover {
+      color: #FFFFFF;
+    }
+    .pw-criteria {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      margin-top: var(--space-2);
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+    }
+    .pw-criteria-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: 3px;
+    }
+    .pw-criteria-item.met {
+      color: var(--success);
+    }
+  </style>
+</head>
+<body class="auth-page">
+
+  <!-- Background decorative floating orbs -->
+  <div class="hero-glow-orb" style="top: -100px; right: -80px;"></div>
+  <div class="hero-glow-orb-secondary" style="bottom: -120px; left: -100px;"></div>
+
+  <div class="auth-container" style="max-width: 520px;">
+    <a href="index.html" class="back-home-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      <span>Back to Home</span>
+    </a>
+
+    <div class="auth-card card-enter">
+      <div class="auth-header">
+        <a href="index.html" class="auth-logo-badge" title="SMARTLIB Home">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+        </a>
+        <h2 class="auth-title">Create Account</h2>
+        <p class="auth-subtitle">Join thousands of students and faculty discovering books on SMARTLIB.</p>
+      </div>
+
+      <form id="register-form" novalidate>
+        <!-- Full Name -->
+        <div class="form-group">
+          <label for="name" class="form-label">Full Name <span class="required">*</span></label>
+          <div class="input-with-icon">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <input 
+              type="text" 
+              id="name" 
+              name="name" 
+              class="form-control" 
+              placeholder="e.g. John Doe" 
+              autocomplete="name"
+              required 
+            />
+          </div>
+        </div>
+
+        <!-- Email Address -->
+        <div class="form-group">
+          <label for="email" class="form-label">Academic Email Address <span class="required">*</span></label>
+          <div class="input-with-icon">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </span>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              class="form-control" 
+              placeholder="student@university.edu" 
+              autocomplete="email"
+              required 
+            />
+          </div>
+        </div>
+
+        <!-- Phone Number -->
+        <div class="form-group">
+          <label for="phone" class="form-label">Phone Number <span class="required">*</span></label>
+          <div class="input-with-icon">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </span>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone" 
+              class="form-control" 
+              placeholder="+91 98765 43210" 
+              autocomplete="tel"
+              required 
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password <span class="required">*</span></label>
+          <div class="input-with-icon input-with-icon-right">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              class="form-control" 
+              placeholder="Minimum 6 characters" 
+              autocomplete="new-password"
+              required 
+            />
+            <button type="button" class="input-icon-right" id="toggle-pw-btn" aria-label="Toggle password" style="background: none; border: none;">
+              <svg id="eye-icon-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <!-- Password requirements indicator -->
+          <div class="pw-criteria" id="pw-criteria-box">
+            <div class="font-semibold text-xs" style="margin-bottom: 2px;">Password requirements:</div>
+            <div class="pw-criteria-item" id="req-len"><span>•</span> Minimum 6 characters</div>
+            <div class="pw-criteria-item" id="req-match"><span>•</span> Passwords must match</div>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label for="confirm_password" class="form-label">Confirm Password <span class="required">*</span></label>
+          <div class="input-with-icon input-with-icon-right">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+            </span>
+            <input 
+              type="password" 
+              id="confirm_password" 
+              name="confirm_password" 
+              class="form-control" 
+              placeholder="Re-enter password" 
+              autocomplete="new-password"
+              required 
+            />
+            <button type="button" class="input-icon-right" id="toggle-confirm-pw-btn" aria-label="Toggle confirm password" style="background: none; border: none;">
+              <svg id="eye-icon-2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="register-submit-btn" class="btn btn-primary btn-lg btn-full" style="margin-top: var(--space-4);">
+          <span>Create Account</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="login.html">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- REQUIRED SHARED JAVASCRIPT MODULES (IN SPECIFIED ORDER) -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- PAGE-SPECIFIC CONTROLLER -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // If already logged in, redirect
+      if (window.auth && window.auth.isAuthenticated()) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      setupPasswordToggles();
+      setupPasswordFeedback();
+      setupRegisterForm();
+    });
+
+    /**
+     * Show/Hide Password toggles
+     */
+    function setupPasswordToggles() {
+      const bindToggle = (btnId, inputId) => {
+        const btn = document.getElementById(btnId);
+        const input = document.getElementById(inputId);
+        if (!btn || !input) return;
+
+        btn.addEventListener('click', () => {
+          const isPassword = input.getAttribute('type') === 'password';
+          input.setAttribute('type', isPassword ? 'text' : 'password');
+          btn.innerHTML = isPassword
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`
+            : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+        });
+      };
+
+      bindToggle('toggle-pw-btn', 'password');
+      bindToggle('toggle-confirm-pw-btn', 'confirm_password');
+    }
+
+    /**
+     * Live Password Criteria Feedback
+     */
+    function setupPasswordFeedback() {
+      const pwInput = document.getElementById('password');
+      const confirmInput = document.getElementById('confirm_password');
+      const reqLen = document.getElementById('req-len');
+      const reqMatch = document.getElementById('req-match');
+
+      function check() {
+        const p1 = pwInput.value;
+        const p2 = confirmInput.value;
+
+        if (p1.length >= 6) {
+          reqLen.classList.add('met');
+          reqLen.innerHTML = `<span>✓</span> Minimum 6 characters`;
+        } else {
+          reqLen.classList.remove('met');
+          reqLen.innerHTML = `<span>•</span> Minimum 6 characters`;
+        }
+
+        if (p1 && p2 && p1 === p2) {
+          reqMatch.classList.add('met');
+          reqMatch.innerHTML = `<span>✓</span> Passwords match`;
+        } else {
+          reqMatch.classList.remove('met');
+          reqMatch.innerHTML = `<span>•</span> Passwords must match`;
+        }
+      }
+
+      pwInput.addEventListener('input', check);
+      confirmInput.addEventListener('input', check);
+    }
+
+    /**
+     * Register Form Submission
+     */
+    function setupRegisterForm() {
+      const form = document.getElementById('register-form');
+      const submitBtn = document.getElementById('register-submit-btn');
+      if (!form || !submitBtn) return;
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const rules = {
+          name: { required: true, minLength: 2, requiredMessage: 'Please enter your full name (at least 2 chars)' },
+          email: { required: true, email: true, requiredMessage: 'Please enter a valid university email' },
+          phone: { required: true, phone: true, phoneMessage: 'Please enter a valid phone number (7-15 digits)' },
+          password: { required: true, minLength: 6, requiredMessage: 'Password must be at least 6 characters' },
+          confirm_password: { required: true, match: 'password', matchMessage: 'Passwords do not match' }
+        };
+
+        if (window.validate && !window.validate.validateForm(form, rules)) {
+          return;
+        }
+
+        const payload = {
+          name: form.name.value.trim(),
+          email: form.email.value.trim(),
+          phone: form.phone.value.trim(),
+          password: form.password.value
+        };
+
+        // UI Loading state
+        submitBtn.disabled = true;
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = `
+          <span class="spinner-sm" style="display:inline-block; width:16px; height:16px; border:2px solid #FFF; border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:8px;"></span>
+          <span>Creating your account...</span>
+        `;
+
+        try {
+          await window.auth.register(payload);
+          if (window.toast) {
+            window.toast.success('Registration successful! Welcome to SMARTLIB.', 2000);
+          }
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1000);
+        } catch (err) {
+          console.error('Registration failed:', err);
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalContent;
+
+          const errorMsg = err.message || (err.data && err.data.message) || 'Registration failed. Email may already be in use.';
+          if (window.toast) {
+            window.toast.error(errorMsg);
+          }
+          if (window.validate) {
+            window.validate.showFieldError('#email', errorMsg);
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

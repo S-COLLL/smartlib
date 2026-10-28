@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Map &amp; 3D Shelf Locator · SMARTLIB</title>
+  <meta name="description" content="Explore the physical library layout with interactive 3D shelf visualizer, floor plans, and real-time book locations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    /* Library Map interactive visual layout */
+    .map-layout-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: var(--space-6);
+      align-items: start;
+    }
+    .map-main-stage {
+      background: var(--surface);
+      border-radius: var(--radius-2xl);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-3d);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .map-floor-header {
+      padding: var(--space-5) var(--space-6);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .floor-tab-btn {
+      padding: 0.5rem 1.1rem;
+      border-radius: var(--radius-md);
+      font-size: var(--text-xs);
+      font-weight: var(--font-bold);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .floor-tab-btn.active {
+      background: var(--gradient-primary);
+      color: #FFFFFF;
+      border-color: var(--primary-700);
+      box-shadow: var(--shadow-sm);
+    }
+    .map-floor-view {
+      padding: var(--space-6);
+      min-height: 520px;
+      background: radial-gradient(circle at 50% 50%, #F5F2FC 0%, #EDE9FE 100%);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-8);
+      position: relative;
+    }
+    .section-zone {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(139, 92, 246, 0.25);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      box-shadow: 0 10px 25px rgba(109, 40, 217, 0.06);
+      position: relative;
+    }
+    .section-zone-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-weight: var(--font-bold);
+      font-size: var(--text-sm);
+      color: var(--primary-900);
+    }
+    .shelves-rack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--space-6);
+    }
+    .rack-card {
+      background: linear-gradient(180deg, #1A0D30 0%, #29134B 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      border: 1.5px solid rgba(139, 92, 246, 0.3);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+      position: relative;
+      transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+    }
+    .rack-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 16px 36px rgba(109, 40, 217, 0.4);
+      border-color: var(--accent-light);
+    }
+    .rack-card.selected-shelf {
+      border-color: #A78BFA;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.5), 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    .rack-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-3);
+      color: #FFFFFF;
+    }
+    .rack-title {
+      font-size: var(--text-xs);
+      font-weight: var(--font-bold);
+      font-family: var(--font-mono);
+      color: var(--accent-light);
+    }
+    .rack-capacity-pill {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: var(--radius-full);
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+    }
+    /* 3D simulated shelf ledge */
+    .mini-shelf-ledge {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 70px;
+      border-bottom: 8px solid #5B21B6;
+      padding: 0 6px;
+      position: relative;
+      box-shadow: 0 6px 10px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+    .mini-book {
+      flex: 1;
+      border-radius: 2px 2px 0 0;
+      transition: transform 0.2s ease;
+      min-width: 8px;
+    }
+    .mini-shelf-ledge:hover .mini-book:nth-child(even) {
+      transform: translateY(-4px);
+    }
+    /* Side Details Panel */
+    .shelf-details-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-sm);
+      padding: var(--space-6);
+      position: sticky;
+      top: calc(var(--header-height) + var(--space-6));
+    }
+    .shelf-books-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      max-height: 480px;
+      overflow-y: auto;
+      margin-top: var(--space-4);
+      padding-right: 4px;
+    }
+    .shelf-book-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      background: var(--bg);
+      text-decoration: none;
+      color: var(--text);
+      transition: all var(--transition-fast);
+    }
+    .shelf-book-item:hover {
+      background: var(--primary-50);
+      border-color: var(--primary-300);
+      transform: translateX(4px);
+    }
+    .shelf-book-thumb {
+      width: 36px;
+      height: 50px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: var(--primary-800);
+      flex-shrink: 0;
+    }
+    @media (max-width: 991px) {
+      .map-layout-grid {
+        grid-template-columns: 1fr;
+      }
+      .shelf-details-panel {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- Collapsible Sidebar (Rendered by navigation.js) -->
+    <aside id="sidebar"></aside>
+
+    <div class="main-content">
+      <!-- Top Header (Rendered by navigation.js) -->
+      <header id="top-header"></header>
+
+      <div class="container-fluid" style="padding-top: var(--space-2);">
+        <!-- Breadcrumb & Header -->
+        <div class="page-header">
+          <div class="page-title-group">
+            <ul class="breadcrumb">
+              <li class="breadcrumb-item"><a href="index.html">Home</a><span class="breadcrumb-separator">/</span></li>
+              <li class="breadcrumb-item active" aria-current="page">Library Map</li>
+            </ul>
+            <h1 class="page-title">Interactive Library Map</h1>
+            <p class="page-subtitle">Locate any book shelf, rack, or academic section with 3D physical guidance.</p>
+          </div>
+          <div class="page-actions">
+            <a href="books.html" class="btn btn-secondary btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+              <span>Browse Catalog</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Main Map & Details Layout Grid -->
+        <div class="map-layout-grid">
+          <!-- Main Map Stage -->
+          <div class="map-main-stage">
+            <!-- Floor Toolbar -->
+            <div class="map-floor-header">
+              <div class="flex-align-center gap-2">
+                <span class="text-xs font-bold text-muted" style="text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px;">
+                  Select Level:
+                </span>
+                <div class="floor-tabs" id="floor-tabs-bar">
+                  <!-- Loaded dynamically from /shelves/floors -->
+                  <button class="floor-tab-btn active" data-floor="1">Floor 1</button>
+                  <button class="floor-tab-btn" data-floor="2">Floor 2</button>
+                  <button class="floor-tab-btn" data-floor="3">Floor 3</button>
+                </div>
+              </div>
+
+              <div class="flex-align-center gap-3">
+                <span class="text-xs text-muted" id="current-floor-label">Floor 1: General &amp; Computer Science Hub</span>
+              </div>
+            </div>
+
+            <!-- Floor View with Sections & 3D Shelves -->
+            <div class="map-floor-view" id="map-floor-view">
+              <!-- Loading Skeleton -->
+              <div class="skeleton" style="height: 160px; border-radius: var(--radius-xl);"></div>
+              <div class="skeleton" style="height: 160px; border-radius: var(--radius-xl);"></div>
+            </div>
+
+            <!-- Legend Bar -->
+            <div class="map-legend">
+              <div class="legend-item">
+                <span class="legend-color-dot" style="background: #7C3AED;"></span>
+                <span>Active Shelf Zone</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color-dot" style="background: #10B981;"></span>
+                <span>High Availability (&gt; 50%)</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color-dot" style="background: #F59E0B;"></span>
+                <span>Limited Stock (&lt; 20%)</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color-dot" style="background: #EF4444;"></span>
+                <span>Fully Occupied Shelf</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side Shelf Details Panel -->
+          <aside class="shelf-details-panel" id="shelf-details-panel">
+            <div class="flex-between" style="margin-bottom: var(--space-3);">
+              <span class="badge badge-primary font-mono" id="shelf-panel-badge">Rack &amp; Shelf Details</span>
+              <span class="text-xs text-muted" id="shelf-panel-floor">Floor 1</span>
+            </div>
+
+            <h3 class="font-bold text-lg" id="shelf-panel-title" style="margin-bottom: var(--space-1); color: var(--text);">
+              Select a Shelf
+            </h3>
+            <p class="text-xs text-secondary" id="shelf-panel-desc" style="margin-bottom: var(--space-4);">
+              Click on any 3D shelf on the map stage to inspect its physical location, occupancy, and current volumes.
+            </p>
+
+            <!-- Capacity Progress -->
+            <div id="shelf-capacity-box" style="display: none; margin-bottom: var(--space-5);">
+              <div class="flex-between text-xs font-semibold" style="margin-bottom: 4px;">
+                <span>Shelf Occupancy</span>
+                <span id="shelf-occupancy-text">0 / 0</span>
+              </div>
+              <div style="height: 8px; border-radius: 4px; background: var(--border); overflow: hidden;">
+                <div id="shelf-capacity-bar" style="height: 100%; width: 0%; background: var(--primary); transition: width 0.4s ease;"></div>
+              </div>
+            </div>
+
+            <!-- Books on Shelf -->
+            <div>
+              <div class="flex-between">
+                <h4 class="font-bold text-xs" style="text-transform: uppercase; letter-spacing: 0.05em; color: var(--text);">
+                  Volumes On This Shelf
+                </h4>
+                <span class="text-xs text-muted" id="shelf-book-count-text">0 books</span>
+              </div>
+              <div class="shelf-books-list" id="shelf-books-list">
+                <p class="text-xs text-secondary" style="padding: var(--space-3); text-align: center;">
+                  No shelf selected. Click a rack above.
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REQUIRED SHARED JAVASCRIPT MODULES (IN SPECIFIED ORDER) -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- PAGE-SPECIFIC CONTROLLER -->
+  <script>
+    let activeFloor = 1;
+    let targetShelfId = null;
+    let floorShelvesData = [];
+    let allFloors = [1, 2, 3];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.navigation) window.navigation.init();
+
+      // Read ?shelf= from URL
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('shelf')) {
+        targetShelfId = params.get('shelf');
+      }
+
+      // Initialize Floors and load
+      initFloorsAndMap();
+    });
+
+    /**
+     * Fetch floors from GET /shelves/floors and initialize map
+     */
+    async function initFloorsAndMap() {
+      try {
+        const res = await window.api.get('/shelves/floors');
+        const floors = (res && res.data) ? res.data : (Array.isArray(res) ? res : [1, 2, 3]);
+        if (floors && floors.length) {
+          allFloors = floors.map(f => typeof f === 'object' ? (f.floor || f.floor_number || 1) : f);
+        }
+      } catch (e) {
+        console.warn('Using default floors [1, 2, 3]', e);
+      }
+
+      // Render floor tab buttons
+      renderFloorTabs();
+
+      // If targetShelfId is provided, first find which floor it belongs to
+      if (targetShelfId) {
+        await resolveShelfFloorAndSelect(targetShelfId);
+      } else {
+        await loadFloorShelves(activeFloor);
+      }
+    }
+
+    /**
+     * Render Floor Selection Tabs
+     */
+    function renderFloorTabs() {
+      const container = document.getElementById('floor-tabs-bar');
+      if (!container) return;
+
+      container.innerHTML = allFloors.map(f => `
+        <button class="floor-tab-btn ${Number(f) === Number(activeFloor) ? 'active' : ''}" data-floor="${f}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16M6 4v16M18 4v16"/></svg>
+          Floor ${f}
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.floor-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const f = Number(btn.getAttribute('data-floor'));
+          if (f !== activeFloor) {
+            activeFloor = f;
+            container.querySelectorAll('.floor-tab-btn').forEach(b => b.classList.toggle('active', Number(b.getAttribute('data-floor')) === f));
+            loadFloorShelves(f);
+          }
+        });
+      });
+    }
+
+    /**
+     * Resolve targetShelfId to its floor
+     */
+    async function resolveShelfFloorAndSelect(shelfId) {
+      try {
+        const res = await window.api.get('/shelves');
+        const list = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+        const found = list.find(s => String(s.shelf_id || s.id) === String(shelfId));
+
+        if (found) {
+          activeFloor = found.floor || found.floor_number || 1;
+          renderFloorTabs();
+        }
+      } catch (e) {
+        console.warn('Could not resolve shelf floor', e);
+      }
+
+      await loadFloorShelves(activeFloor);
+    }
+
+    /**
+     * Load all shelves for a floor from GET /shelves?floor=:floor
+     */
+    async function loadFloorShelves(floor) {
+      const stage = document.getElementById('map-floor-view');
+      const floorLabel = document.getElementById('current-floor-label');
+      if (!stage) return;
+
+      stage.innerHTML = `
+        <div class="skeleton" style="height: 160px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 160px; border-radius: var(--radius-xl);"></div>
+      `;
+
+      if (floorLabel) {
+        const floorNames = {
+          1: 'Floor 1: General Reading, Fiction & Computer Science Hub',
+          2: 'Floor 2: Pure & Applied Sciences, Mathematics & World History',
+          3: 'Floor 3: Classical Literature, Philosophy & Quiet Research Bay'
+        };
+        floorLabel.textContent = floorNames[floor] || `Floor ${floor} Collection Area`;
+      }
+
+      try {
+        const res = await window.api.get('/shelves', { floor });
+        const shelves = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+        floorShelvesData = shelves;
+
+        if (!shelves.length) {
+          stage.innerHTML = `
+            <div class="empty-state" style="padding: var(--space-12);">
+              <h3 class="empty-state-title">No Shelves on Floor ${floor}</h3>
+              <p class="empty-state-desc">This floor currently has no mapped shelf racks.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Group shelves by Section
+        const sectionsMap = {};
+        shelves.forEach(s => {
+          const sec = s.section_name || s.section || 'General';
+          if (!sectionsMap[sec]) sectionsMap[sec] = [];
+          sectionsMap[sec].push(s);
+        });
+
+        let html = '';
+        Object.keys(sectionsMap).forEach(secName => {
+          const sectionShelves = sectionsMap[secName];
+          const secLetter = sectionShelves[0].section || secName.charAt(0);
+
+          html += `
+            <div class="section-zone card-enter">
+              <div class="section-zone-header">
+                <div class="section-badge">
+                  <span class="badge badge-primary font-mono" style="padding: 4px 8px; font-size: 13px;">Zone ${secLetter}</span>
+                  <span>${secName}</span>
+                </div>
+                <span class="text-xs text-muted font-semibold">${sectionShelves.length} Shelves Mapped</span>
+              </div>
+
+              <div class="shelves-rack-grid">
+                ${sectionShelves.map(shelf => renderRackCard(shelf)).join('')}
+              </div>
+            </div>
+          `;
+        });
+
+        stage.innerHTML = html;
+
+        // Bind rack card clicks
+        stage.querySelectorAll('.rack-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const shelfId = card.getAttribute('data-shelf-id');
+            selectShelf(shelfId);
+          });
+        });
+
+        // If targetShelfId matches a shelf on this floor, auto-select and highlight
+        if (targetShelfId) {
+          selectShelf(targetShelfId, true);
+        } else if (shelves.length > 0) {
+          // Select first shelf by default
+          selectShelf(shelves[0].shelf_id || shelves[0].id, false);
+        }
+
+      } catch (err) {
+        console.error('Failed to load shelves for floor', err);
+        stage.innerHTML = `
+          <div class="empty-state">
+            <h3 class="empty-state-title">Map Loading Failed</h3>
+            <p class="empty-state-desc">Unable to retrieve shelf layouts for this floor.</p>
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * Render a 3D simulated rack shelf card
+     */
+    function renderRackCard(shelf) {
+      const id = shelf.shelf_id || shelf.id;
+      const rackNum = shelf.rack_number || shelf.rack || 1;
+      const shelfNum = shelf.shelf_number || shelf.shelf || 1;
+      const capacity = shelf.capacity || 50;
+      const booksCount = shelf.book_count ?? shelf.current_books ?? Math.floor(capacity * 0.7);
+      const isTarget = String(id) === String(targetShelfId);
+
+      // Random mini-book heights for realistic visual spine variance
+      const bookSpinesColors = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#6366F1', '#A855F7', '#14B8A6'];
+      let booksHtml = '';
+      const numMiniBooks = Math.min(12, Math.max(5, Math.round((booksCount / capacity) * 12)));
+
+      for (let i = 0; i < numMiniBooks; i++) {
+        const height = 45 + ((i * 7) % 22);
+        const color = bookSpinesColors[i % bookSpinesColors.length];
+        booksHtml += `<div class="mini-book" style="height: ${height}px; background: ${color};"></div>`;
+      }
+
+      return `
+        <div class="rack-card ${isTarget ? 'selected-shelf' : ''}" data-shelf-id="${id}" id="shelf-card-${id}">
+          ${isTarget ? '<div class="glow-pin" title="Located Shelf" style="top: -8px; left: 50%;"></div>' : ''}
+          <div class="rack-card-header">
+            <span class="rack-title">Rack ${rackNum} · Shelf ${shelfNum}</span>
+            <span class="rack-capacity-pill">${booksCount}/${capacity}</span>
+          </div>
+
+          <!-- 3D Ledge Shelf -->
+          <div class="mini-shelf-ledge">
+            ${booksHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * Select shelf, show details in side panel, and load books
+     */
+    async function selectShelf(shelfId, scrollIntoView = false) {
+      const card = document.getElementById(`shelf-card-${shelfId}`);
+      document.querySelectorAll('.rack-card').forEach(c => c.classList.remove('selected-shelf'));
+      document.querySelectorAll('.glow-pin').forEach(p => p.remove());
+
+      if (card) {
+        card.classList.add('selected-shelf');
+        const pin = document.createElement('div');
+        pin.className = 'glow-pin';
+        pin.title = 'Active Locator';
+        pin.style.top = '-8px';
+        pin.style.left = '50%';
+        card.appendChild(pin);
+
+        if (scrollIntoView) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+
+      const shelf = floorShelvesData.find(s => String(s.shelf_id || s.id) === String(shelfId));
+      if (!shelf) return;
+
+      // Update Panel Info
+      const panelBadge = document.getElementById('shelf-panel-badge');
+      const panelFloor = document.getElementById('shelf-panel-floor');
+      const panelTitle = document.getElementById('shelf-panel-title');
+      const panelDesc = document.getElementById('shelf-panel-desc');
+      const capacityBox = document.getElementById('shelf-capacity-box');
+      const occupancyText = document.getElementById('shelf-occupancy-text');
+      const capacityBar = document.getElementById('shelf-capacity-bar');
+      const bookCountText = document.getElementById('shelf-book-count-text');
+      const booksList = document.getElementById('shelf-books-list');
+
+      const rackNum = shelf.rack_number || shelf.rack || 1;
+      const shelfNum = shelf.shelf_number || shelf.shelf || 1;
+      const secName = shelf.section_name || shelf.section || 'General';
+      const capacity = shelf.capacity || 50;
+      const bookCount = shelf.book_count ?? shelf.current_books ?? 0;
+      const percent = Math.min(100, Math.round((bookCount / capacity) * 100));
+
+      if (panelBadge) panelBadge.textContent = `Rack ${rackNum} › Shelf ${shelfNum}`;
+      if (panelFloor) panelFloor.textContent = `Floor ${shelf.floor || activeFloor}`;
+      if (panelTitle) panelTitle.textContent = `${secName} Shelf`;
+      if (panelDesc) panelDesc.textContent = shelf.description || `Located in Section ${secName}, Rack ${rackNum}.`;
+
+      if (capacityBox) {
+        capacityBox.style.display = 'block';
+        if (occupancyText) occupancyText.textContent = `${bookCount} / ${capacity} items (${percent}%)`;
+        if (capacityBar) {
+          capacityBar.style.width = `${percent}%`;
+          capacityBar.style.backgroundColor = percent > 90 ? 'var(--danger)' : (percent > 60 ? 'var(--primary)' : 'var(--success)');
+        }
+      }
+
+      // Fetch books on this shelf
+      if (booksList) {
+        booksList.innerHTML = '<div class="skeleton" style="height: 50px; border-radius: var(--radius-md);"></div>';
+      }
+
+      try {
+        // Query /books?shelf_id=ID or /books?floor=&section=
+        let books = [];
+        try {
+          const res = await window.api.get('/books', { shelf_id: shelfId, limit: 20 });
+          books = (res && res.data && res.data.books) || (res && res.data) || (Array.isArray(res) ? res : []);
+        } catch (_) {
+          // Fallback query by floor & section
+          const res2 = await window.api.get('/books', { floor: activeFloor, limit: 10 });
+          books = (res2 && res2.data && res2.data.books) || (res2 && res2.data) || [];
+        }
+
+        if (bookCountText) bookCountText.textContent = `${books.length} volumes`;
+
+        if (!books.length) {
+          booksList.innerHTML = `
+            <p class="text-xs text-secondary" style="padding: var(--space-4); text-align: center;">
+              No books currently cataloged on this shelf rack.
+            </p>
+          `;
+          return;
+        }
+
+        booksList.innerHTML = books.map(book => {
+          const bId = book.book_id || book.id || '';
+          const bTitle = book.title || 'Untitled Book';
+          const bAuthor = book.author || 'Author';
+          const bCover = book.cover_image;
+          const bAvail = book.available_copies ?? 1;
+
+          return `
+            <a href="book-details.html?id=${bId}" class="shelf-book-item" title="View details for ${bTitle}">
+              <div class="shelf-book-thumb flex-center">
+                ${bCover ? `<img src="${bCover}" alt="${bTitle}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" />` : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>`}
+              </div>
+              <div class="flex-col flex-1" style="min-width: 0;">
+                <span class="text-sm font-semibold truncate" style="color: var(--text);">${bTitle}</span>
+                <span class="text-xs text-muted truncate">by ${bAuthor}</span>
+                <span class="text-xs" style="color: ${bAvail > 0 ? 'var(--success)' : 'var(--danger)'}; margin-top: 2px;">
+                  ${bAvail > 0 ? 'Available On Shelf' : 'Currently Checked Out'}
+                </span>
+              </div>
+            </a>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.warn('Could not load shelf books', err);
+        booksList.innerHTML = '<p class="text-xs text-secondary">Unable to load shelf books.</p>';
+      }
+    }
+  </script>
+</body>
+</html>

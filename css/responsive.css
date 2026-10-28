@@ -1,0 +1,227 @@
+/**
+ * SMARTLIB - Responsive Breakpoints & Device Adaptations
+ */
+
+/* ==========================================================================
+   1. Large Desktop (1200px and up)
+   ========================================================================== */
+@media (min-width: 1200px) {
+  .books-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ==========================================================================
+   2. Desktop (992px - 1199px)
+   ========================================================================== */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .books-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-detail-layout {
+    grid-template-columns: 280px 1fr;
+    gap: var(--space-6);
+  }
+}
+
+/* ==========================================================================
+   3. Tablet (768px - 991px)
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 991px) {
+  :root {
+    --sidebar-width: 240px;
+  }
+
+  .main-content {
+    padding: calc(var(--header-height) + var(--space-4)) var(--space-5) var(--space-10) var(--space-5);
+  }
+
+  .books-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-sidebar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-cover-col {
+    max-width: 300px;
+    margin: 0 auto var(--space-6) auto;
+  }
+}
+
+/* ==========================================================================
+   4. Small Tablet / Large Mobile (576px - 767px)
+   ========================================================================== */
+@media (max-width: 767px) {
+  :root {
+    --header-height: 56px;
+  }
+
+  /* Sidebar transforms into off-canvas drawer */
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    z-index: var(--z-modal);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.4);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(33, 17, 61, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: calc(var(--z-modal) - 1);
+  }
+
+  .sidebar.mobile-open ~ .sidebar-backdrop,
+  body.sidebar-open .sidebar-backdrop {
+    display: block;
+  }
+
+  .top-header {
+    left: 0 !important;
+    padding: 0 var(--space-4);
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    padding: calc(var(--header-height) + var(--space-4)) var(--space-4) calc(var(--mobile-nav-height) + var(--space-8)) var(--space-4);
+  }
+
+  .mobile-nav {
+    display: flex;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+
+  .page-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .books-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-sidebar-layout,
+  .grid-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-filters {
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+  }
+
+  .modal {
+    max-width: 95vw;
+    margin: var(--space-2);
+  }
+}
+
+/* ==========================================================================
+   5. Mobile Phones (< 576px)
+   ========================================================================== */
+@media (max-width: 575px) {
+  .page-title {
+    font-size: var(--text-2xl);
+  }
+
+  .books-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: var(--space-4);
+  }
+
+  .search-bar {
+    max-width: 100%;
+  }
+
+  .shelf-row {
+    height: 160px;
+    gap: 6px;
+  }
+
+  .book-spine {
+    width: 28px;
+  }
+
+  .toast-container {
+    left: var(--space-4);
+    right: var(--space-4);
+    bottom: calc(var(--mobile-nav-height) + var(--space-4));
+    width: auto;
+  }
+
+  .table th, .table td {
+    padding: var(--space-3) var(--space-3);
+  }
+
+  .btn {
+    min-height: 44px; /* Accessible touch target */
+  }
+
+  .card-header, .card-body, .card-footer {
+    padding: var(--space-4);
+  }
+}
