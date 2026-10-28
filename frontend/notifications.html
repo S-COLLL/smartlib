@@ -3,31 +3,420 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notifications · SmartLib</title>
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-  <script src="js/theme-init.js"></script>
+  <title>Notifications · SMARTLIB</title>
+  <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .notif-card {
+      background-color: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      transition: all var(--transition-base);
+      position: relative;
+    }
+    .notif-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    .notif-card.unread {
+      border-left: 4px solid var(--primary);
+      background: linear-gradient(to right, rgba(109, 40, 217, 0.05) 0%, var(--surface) 25%);
+    }
+    .notif-card.read {
+      opacity: 0.85;
+    }
+    .notif-icon-wrap {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .notif-delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.25rem;
+      padding: 4px;
+      line-height: 1;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition-fast), background var(--transition-fast);
+    }
+    .notif-delete-btn:hover {
+      color: var(--danger);
+      background-color: var(--danger-bg);
+    }
+  </style>
 </head>
 <body>
-  <main class="page" id="page" style="max-width:980px">
-    <div class="page-head">
-      <div>
-        <div class="breadcrumb"><a href="dashboard.html">Dashboard</a> / Notifications</div>
-        <h1>Notifications</h1>
-        <p class="subtitle" id="sub">Issues, due dates, overdue alerts, fines, payments and reservations.</p>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header" id="top-header"></header>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <ul class="breadcrumb" aria-label="Breadcrumb">
+            <li class="breadcrumb-item"><a href="/pages/member-dashboard.html">Dashboard</a></li>
+            <li class="breadcrumb-separator">/</li>
+            <li class="breadcrumb-item active" aria-current="page">Notifications</li>
+          </ul>
+          <div class="flex-align-center gap-3">
+            <h1 class="page-title" style="margin-bottom: 0;">Notifications</h1>
+            <span class="badge badge-primary font-mono" id="unread-count-badge">0 unread</span>
+          </div>
+          <p class="page-subtitle" style="margin-top: var(--space-2);">
+            Stay updated with book due dates, hold pickup notifications, fine alerts, and system notices.
+          </p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary" id="mark-all-read-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Mark All as Read</span>
+          </button>
+        </div>
       </div>
-      <div class="page-actions" id="pageActions"></div>
-    </div>
-    <div class="card">
-      <div class="table-toolbar"><div class="chips" id="filters"></div></div>
-      <div id="list"></div>
-      <div class="pagination" id="pagination"></div>
-    </div>
-  </main>
-  <script type="module" src="js/notifications.js"></script>
+
+      <!-- Controls & Filter Toolbar -->
+      <div class="flex-between flex-wrap gap-4" style="margin-bottom: var(--space-6);">
+        <div class="tabs" role="tablist">
+          <button class="tab active" id="tab-notif-all" role="tab">All Notifications</button>
+          <button class="tab" id="tab-notif-unread" role="tab">Unread Only</button>
+        </div>
+        <div class="flex-align-center gap-2 text-xs text-muted">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          <span id="auto-refresh-status">Auto-refreshes every 60s</span>
+        </div>
+      </div>
+
+      <!-- Notifications List Container -->
+      <section id="notifications-list" class="flex-col gap-4">
+        <!-- Skeleton Loaders -->
+        <div class="skeleton-card">
+          <div class="flex gap-4">
+            <div class="skeleton" style="width: 44px; height: 44px; border-radius: var(--radius-lg);"></div>
+            <div class="flex-col flex-1">
+              <div class="skeleton skeleton-text title" style="width: 50%;"></div>
+              <div class="skeleton skeleton-text" style="width: 75%;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="flex gap-4">
+            <div class="skeleton" style="width: 44px; height: 44px; border-radius: var(--radius-lg);"></div>
+            <div class="flex-col flex-1">
+              <div class="skeleton skeleton-text title" style="width: 50%;"></div>
+              <div class="skeleton skeleton-text" style="width: 75%;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Specific Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Guard route
+      if (!window.auth || !window.auth.requireAuth(['member'])) {
+        return;
+      }
+
+      // 2. Navigation init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      const listContainer = document.getElementById('notifications-list');
+      const unreadBadge = document.getElementById('unread-count-badge');
+      const markAllBtn = document.getElementById('mark-all-read-btn');
+      const tabAll = document.getElementById('tab-notif-all');
+      const tabUnread = document.getElementById('tab-notif-unread');
+
+      let allNotifications = [];
+      let currentFilter = 'all'; // 'all' or 'unread'
+
+      // Filter tabs
+      tabAll.addEventListener('click', () => {
+        currentFilter = 'all';
+        tabAll.classList.add('active');
+        tabUnread.classList.remove('active');
+        renderNotifications();
+      });
+
+      tabUnread.addEventListener('click', () => {
+        currentFilter = 'unread';
+        tabUnread.classList.add('active');
+        tabAll.classList.remove('active');
+        renderNotifications();
+      });
+
+      // 3. Fetch notifications
+      async function fetchNotifications(silent = false) {
+        try {
+          const [notifsRes, countRes] = await Promise.allSettled([
+            window.api.get('/notifications', { limit: 50 }),
+            window.api.get('/notifications/unread-count')
+          ]);
+
+          if (notifsRes.status === 'fulfilled' && notifsRes.value) {
+            allNotifications = notifsRes.value.data || notifsRes.value || [];
+          }
+
+          let unreadCount = 0;
+          if (countRes.status === 'fulfilled' && countRes.value) {
+            const d = countRes.value.data || countRes.value;
+            unreadCount = d.unreadCount ?? d.count ?? d.unread ?? 0;
+          } else {
+            unreadCount = allNotifications.filter(n => !n.isRead && !n.read).length;
+          }
+
+          unreadBadge.textContent = `${unreadCount} unread`;
+          if (unreadCount === 0) {
+            markAllBtn.disabled = true;
+          } else {
+            markAllBtn.disabled = false;
+          }
+
+          renderNotifications();
+        } catch (err) {
+          console.error('Error fetching notifications:', err);
+          if (!silent) {
+            listContainer.innerHTML = `
+              <div class="card p-6 text-center">
+                <p class="text-danger font-semibold">Failed to load notifications: ${err.message || 'Server error'}</p>
+                <button class="btn btn-secondary btn-sm" onclick="location.reload()">Retry</button>
+              </div>
+            `;
+          }
+        }
+      }
+
+      // 4. Render notifications
+      function renderNotifications() {
+        let items = allNotifications;
+        if (currentFilter === 'unread') {
+          items = allNotifications.filter(n => !n.isRead && !n.read);
+        }
+
+        if (items.length === 0) {
+          listContainer.innerHTML = window.components.emptyState(
+            'bell',
+            currentFilter === 'unread' ? 'No Unread Notifications' : 'No Notifications Yet',
+            currentFilter === 'unread' ? 'You have read all your alerts.' : 'You have no notifications in your inbox right now.',
+            '',
+            ''
+          );
+          return;
+        }
+
+        let html = '';
+        items.forEach(n => {
+          const id = n._id || n.id;
+          const isRead = n.isRead || n.read;
+          const type = (n.type || 'system').toLowerCase();
+          const title = n.title || 'Notification';
+          const message = n.message || '';
+          const time = window.format ? window.format.relativeTime(n.createdAt || n.created_at) : 'recently';
+          const link = n.link || (n.relatedEntity && n.relatedEntity.link) || null;
+
+          // Icon based on type
+          let iconSvg = '';
+          let bgClass = '';
+          if (type.includes('due') || type.includes('loan')) {
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>';
+            bgClass = 'stat-icon warning';
+          } else if (type.includes('fine') || type.includes('payment')) {
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>';
+            bgClass = 'stat-icon danger';
+          } else if (type.includes('reservation')) {
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>';
+            bgClass = 'stat-icon info';
+          } else {
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+            bgClass = 'stat-icon primary';
+          }
+
+          html += `
+            <div class="notif-card ${isRead ? 'read' : 'unread'}" data-id="${id}">
+              <div class="notif-icon-wrap ${bgClass}">
+                ${iconSvg}
+              </div>
+
+              <div class="flex-col flex-1" style="min-width: 0;">
+                <div class="flex-between">
+                  <h3 class="text-sm ${isRead ? 'font-semibold' : 'font-extrabold'}" style="color: var(--text); margin-bottom: 2px;">
+                    ${link ? `<a href="${link}" class="notif-link" style="color: inherit; text-decoration: none;">${title} &rarr;</a>` : title}
+                  </h3>
+                  <div class="flex-align-center gap-2">
+                    <span class="text-xs text-muted">${time}</span>
+                    <button class="notif-delete-btn" data-id="${id}" title="Delete notification" aria-label="Delete notification">&times;</button>
+                  </div>
+                </div>
+
+                <p class="text-sm text-secondary" style="margin-top: 4px; margin-bottom: var(--space-2); line-height: var(--leading-normal);">${message}</p>
+
+                <div class="flex-between">
+                  ${!isRead ? `
+                    <button class="btn btn-ghost btn-sm mark-read-btn" data-id="${id}" style="padding-left: 0; font-size: var(--text-xs); color: var(--primary);">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span>Mark as read</span>
+                    </button>
+                  ` : `
+                    <span class="text-xs text-muted flex-align-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                      Read
+                    </span>
+                  `}
+
+                  ${link ? `
+                    <a href="${link}" class="btn btn-ghost btn-sm text-xs" style="color: var(--primary);">
+                      View Details &rarr;
+                    </a>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        listContainer.innerHTML = html;
+
+        // Wire single mark read
+        listContainer.querySelectorAll('.mark-read-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.getAttribute('data-id');
+            try {
+              await window.api.put(`/notifications/${id}/read`, {});
+              const notif = allNotifications.find(n => (n._id || n.id) == id);
+              if (notif) {
+                notif.isRead = true;
+                notif.read = true;
+              }
+              const card = listContainer.querySelector(`[data-id="${id}"]`);
+              if (card) {
+                card.classList.remove('unread');
+                card.classList.add('read');
+                btn.parentElement.innerHTML = `<span class="text-xs text-muted flex-align-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Read</span>`;
+              }
+              // Update badge
+              const unread = allNotifications.filter(n => !n.isRead && !n.read).length;
+              unreadBadge.textContent = `${unread} unread`;
+              if (unread === 0) markAllBtn.disabled = true;
+            } catch (err) {
+              window.toast.error(err.message || 'Failed to mark read', 'Error');
+            }
+          });
+        });
+
+        // Wire delete buttons
+        listContainer.querySelectorAll('.notif-delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.getAttribute('data-id');
+            try {
+              await window.api.delete(`/notifications/${id}`);
+              allNotifications = allNotifications.filter(n => (n._id || n.id) != id);
+              const card = listContainer.querySelector(`[data-id="${id}"]`);
+              if (card) card.remove();
+              const unread = allNotifications.filter(n => !n.isRead && !n.read).length;
+              unreadBadge.textContent = `${unread} unread`;
+              if (allNotifications.length === 0) renderNotifications();
+              window.toast.info('Notification dismissed.', 'Deleted');
+            } catch (err) {
+              window.toast.error(err.message || 'Failed to delete notification', 'Error');
+            }
+          });
+        });
+
+        // Wire click card to mark read (if unread)
+        listContainer.querySelectorAll('.notif-card.unread').forEach(card => {
+          card.addEventListener('click', async (e) => {
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            const id = card.getAttribute('data-id');
+            try {
+              await window.api.put(`/notifications/${id}/read`, {});
+              const notif = allNotifications.find(n => (n._id || n.id) == id);
+              if (notif) {
+                notif.isRead = true;
+                notif.read = true;
+              }
+              card.classList.remove('unread');
+              card.classList.add('read');
+              const unread = allNotifications.filter(n => !n.isRead && !n.read).length;
+              unreadBadge.textContent = `${unread} unread`;
+            } catch (err) {
+              // Silently fail card click
+            }
+          });
+        });
+      }
+
+      // 5. Mark All Read
+      markAllBtn.addEventListener('click', async () => {
+        markAllBtn.disabled = true;
+        markAllBtn.innerHTML = '<span class="spinner spinner-sm"></span> Marking...';
+        try {
+          await window.api.put('/notifications/read-all', {});
+          window.toast.success('All notifications marked as read.', 'Success');
+          allNotifications.forEach(n => {
+            n.isRead = true;
+            n.read = true;
+          });
+          unreadBadge.textContent = '0 unread';
+          renderNotifications();
+        } catch (err) {
+          window.toast.error(err.message || 'Failed to mark all as read', 'Error');
+        } finally {
+          markAllBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Mark All as Read</span>
+          `;
+        }
+      });
+
+      // 6. Polling: Auto-refresh every 60 seconds
+      const pollTimer = setInterval(() => {
+        fetchNotifications(true);
+      }, 60000);
+
+      window.addEventListener('beforeunload', () => {
+        clearInterval(pollTimer);
+      });
+
+      // Initial fetch
+      fetchNotifications();
+    });
+  </script>
 </body>
 </html>
+
