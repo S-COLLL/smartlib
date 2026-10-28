@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction History · SMARTLIB</title>
+  <meta name="description" content="SMARTLIB Library Management System - Circulation Loan and Return Audit History">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .trans-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5);
+      margin-bottom: var(--space-8);
+    }
+    @media (max-width: 800px) {
+      .trans-stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .filter-bar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-4) var(--space-6);
+      margin-bottom: var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+    @media print {
+      .sidebar, #top-header, .page-actions, .filter-bar-card, .pagination, .breadcrumb {
+        display: none !important;
+      }
+      .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+      }
+      .card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside id="sidebar"></aside>
+
+    <!-- Top Header -->
+    <header id="top-header"></header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Breadcrumb -->
+      <nav aria-label="Breadcrumb">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/pages/admin-dashboard.html">SMARTLIB</a></li>
+          <li class="breadcrumb-item">Circulation</li>
+          <li class="breadcrumb-item active" aria-current="page">Transaction History</li>
+        </ul>
+      </nav>
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="page-title-group">
+          <h1 class="page-title">Transaction History</h1>
+          <p class="page-subtitle">Comprehensive ledger of all book issues, renewals, returns, and overdue loan statuses.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary btn-sm" id="export-csv-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Export CSV</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" id="print-table-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            <span>Print Report</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Summary Stats (Total Transactions, Active Loans, Returns Today) -->
+      <section class="trans-stats-grid">
+        <!-- Total Transactions -->
+        <div class="stat-card card-3d">
+          <div class="stat-icon primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="stats-total-loans">0</span>
+            <span class="stat-label">Total Transactions</span>
+          </div>
+        </div>
+
+        <!-- Active Loans -->
+        <div class="stat-card card-3d">
+          <div class="stat-icon warning">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value text-primary" id="stats-active-loans">0</span>
+            <span class="stat-label">Active Loans Out</span>
+          </div>
+        </div>
+
+        <!-- Returns Today -->
+        <div class="stat-card card-3d">
+          <div class="stat-icon success">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value text-success" id="stats-returns-today">0</span>
+            <span class="stat-label">Returns Processed</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filter Bar -->
+      <section class="filter-bar-card">
+        <div class="flex-align-center gap-3 flex-wrap flex-1">
+          <!-- Member / Book Search -->
+          <div class="search-bar" style="max-width: 320px;">
+            <span class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <input type="text" class="form-control" id="trans-search-input" placeholder="Search book, member, membership #..." />
+          </div>
+
+          <!-- Status Dropdown -->
+          <div style="min-width: 160px;">
+            <select class="form-select" id="trans-status-filter">
+              <option value="">All Statuses</option>
+              <option value="ISSUED">Issued (Active)</option>
+              <option value="RETURNED">Returned</option>
+              <option value="OVERDUE">Overdue</option>
+            </select>
+          </div>
+
+          <!-- Date Range Filter -->
+          <div class="flex-align-center gap-2">
+            <input type="date" class="form-control form-control-sm font-mono" id="filter-date-from" title="From Issue Date" />
+            <span class="text-xs text-muted">to</span>
+            <input type="date" class="form-control form-control-sm font-mono" id="filter-date-to" title="To Issue Date" />
+          </div>
+
+          <button class="btn btn-ghost btn-sm" id="reset-trans-filters-btn">
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <span class="badge badge-secondary" id="total-trans-counter">Loading...</span>
+      </section>
+
+      <!-- Transactions Table -->
+      <section class="card">
+        <div class="table-container" style="border: none; margin-bottom: 0;">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Book Title &amp; Author</th>
+                <th>Member</th>
+                <th>Membership #</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Status</th>
+                <th>Fine Assessed</th>
+                <th>Issued By</th>
+              </tr>
+            </thead>
+            <tbody id="trans-table-body">
+              <tr><td colspan="10"><div class="skeleton skeleton-text py-2"></div></td></tr>
+              <tr><td colspan="10"><div class="skeleton skeleton-text py-2"></div></td></tr>
+              <tr><td colspan="10"><div class="skeleton skeleton-text py-2"></div></td></tr>
+              <tr><td colspan="10"><div class="skeleton skeleton-text py-2"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="trans-empty-state" class="empty-state" style="display: none; border: none; padding: var(--space-10) var(--space-6);">
+          <div class="empty-state-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+          </div>
+          <h3 class="empty-state-title">No Transactions Recorded</h3>
+          <p class="empty-state-desc">No circulation records match your specified search criteria or date range.</p>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="card-footer flex-between flex-wrap gap-3" id="pagination-wrapper" style="display: none;">
+          <span class="text-xs text-secondary" id="pagination-summary">Showing 0 of 0</span>
+          <div id="pagination-controls"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules in strict order -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Role Protection Guard
+      if (!window.auth || !window.auth.requireAuth(['admin', 'librarian'])) {
+        return;
+      }
+
+      // 2. Navigation Init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      // 3. State
+      let currentPage = 1;
+      const limit = 15;
+      let totalPages = 1;
+      let totalCount = 0;
+      let searchTimer = null;
+      let currentLoans = [];
+
+      // Elements
+      const searchInput = document.getElementById('trans-search-input');
+      const statusFilter = document.getElementById('trans-status-filter');
+      const dateFrom = document.getElementById('filter-date-from');
+      const dateTo = document.getElementById('filter-date-to');
+      const resetBtn = document.getElementById('reset-trans-filters-btn');
+      const tbody = document.getElementById('trans-table-body');
+      const emptyState = document.getElementById('trans-empty-state');
+      const counterBadge = document.getElementById('total-trans-counter');
+      const paginationWrapper = document.getElementById('pagination-wrapper');
+      const paginationControls = document.getElementById('pagination-controls');
+      const paginationSummary = document.getElementById('pagination-summary');
+      const exportCsvBtn = document.getElementById('export-csv-btn');
+      const printBtn = document.getElementById('print-table-btn');
+
+      // 4. Load Loan Stats
+      async function loadLoanStats() {
+        try {
+          const res = await window.api.get('/loans/stats');
+          const s = (res && res.data) ? res.data : (res || {});
+
+          document.getElementById('stats-total-loans').textContent = s.totalLoans || s.total || 0;
+          document.getElementById('stats-active-loans').textContent = s.activeLoans || s.active || 0;
+          document.getElementById('stats-returns-today').textContent = s.returnsToday || s.returned_today || s.returns || 0;
+        } catch (e) {
+          console.warn('Failed to load loan stats:', e);
+        }
+      }
+
+      // 5. Fetch Transactions
+      async function fetchTransactions(page = 1) {
+        currentPage = page;
+        renderSkeletons();
+
+        try {
+          const params = {
+            page: currentPage,
+            limit: limit,
+            search: searchInput.value.trim(),
+            status: statusFilter.value
+          };
+
+          if (dateFrom.value) params.from = dateFrom.value;
+          if (dateTo.value) params.to = dateTo.value;
+
+          const res = await window.api.get('/loans', params);
+          const data = (res && res.data) ? res.data : (res || {});
+          const loans = Array.isArray(data.loans) ? data.loans : (Array.isArray(data) ? data : []);
+          currentLoans = loans;
+
+          const pag = data.pagination || {};
+          totalPages = Number(pag.totalPages || pag.pages || 1);
+          totalCount = Number(pag.total || pag.totalCount || loans.length);
+
+          renderTable(loans);
+          renderPaginationUI();
+        } catch (err) {
+          console.error('Failed to load transaction history:', err);
+          tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger py-5">Error: ${err.message || 'Failed to fetch transaction logs'}</td></tr>`;
+          if (window.toast) window.toast.error(err.message || 'Failed to fetch transactions');
+        }
+      }
+
+      function renderSkeletons() {
+        emptyState.style.display = 'none';
+        let html = '';
+        for (let i = 0; i < 6; i++) {
+          html += `
+            <tr>
+              <td><div class="skeleton skeleton-text font-mono" style="width: 50px;"></div></td>
+              <td>
+                <div class="skeleton skeleton-text" style="width: 180px;"></div>
+                <div class="skeleton skeleton-text short" style="width: 100px;"></div>
+              </td>
+              <td><div class="skeleton skeleton-text" style="width: 120px;"></div></td>
+              <td><div class="skeleton skeleton-text font-mono" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text font-mono" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text font-mono" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text font-mono" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 70px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 60px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 90px;"></div></td>
+            </tr>
+          `;
+        }
+        tbody.innerHTML = html;
+      }
+
+      // 6. Render Table
+      function renderTable(loans) {
+        if (!loans.length) {
+          tbody.innerHTML = '';
+          emptyState.style.display = 'block';
+          paginationWrapper.style.display = 'none';
+          counterBadge.textContent = '0 Records';
+          return;
+        }
+
+        emptyState.style.display = 'none';
+        paginationWrapper.style.display = 'flex';
+        counterBadge.textContent = `${totalCount} Record${totalCount === 1 ? '' : 's'}`;
+
+        const fmt = window.format || {
+          date: d => d ? new Date(d).toLocaleDateString() : '—',
+          currency: n => 'Rs. ' + Number(n||0).toFixed(2),
+          statusBadge: s => `<span class="badge">${s}</span>`
+        };
+
+        let html = '';
+        loans.forEach(loan => {
+          const id = loan.loan_id || loan.id || loan._id;
+          const bookTitle = loan.title || (loan.book && loan.book.title) || 'Untitled';
+          const author = loan.author || (loan.book && loan.book.author) || 'Unknown';
+          const memberName = loan.member_name || (loan.user && loan.user.name) || 'Member';
+          const memNum = loan.membership_number || '—';
+          const issueDate = fmt.date(loan.issue_date || loan.issued_at);
+          const dueDate = fmt.date(loan.due_date);
+          const returnDate = loan.returned_at || loan.return_date ? fmt.date(loan.returned_at || loan.return_date) : '<span class="text-muted">Not returned</span>';
+          const status = loan.status || (loan.returned_at ? 'RETURNED' : 'ISSUED');
+          const badge = fmt.statusBadge(status);
+          const fine = loan.fine_amount || loan.fine ? fmt.currency(loan.fine_amount || loan.fine) : '<span class="text-muted">—</span>';
+          const staff = loan.issued_by_name || loan.issued_by || 'Circulation Desk';
+
+          html += `
+            <tr data-loan-id="${id}">
+              <td class="font-mono text-xs font-bold text-primary">#LN-${id}</td>
+              <td>
+                <span class="font-semibold text-sm d-block text-truncate" style="max-width: 240px;" title="${bookTitle}">${bookTitle}</span>
+                <span class="text-xs text-secondary">${author}</span>
+              </td>
+              <td><span class="text-sm font-medium">${memberName}</span></td>
+              <td><span class="badge badge-secondary font-mono">${memNum}</span></td>
+              <td class="text-xs font-mono">${issueDate}</td>
+              <td class="text-xs font-mono font-bold">${dueDate}</td>
+              <td class="text-xs font-mono">${returnDate}</td>
+              <td>${badge}</td>
+              <td class="font-bold text-xs ${loan.fine_amount ? 'text-danger' : ''}">${fine}</td>
+              <td class="text-xs text-secondary">${staff}</td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = html;
+      }
+
+      // 7. Pagination UI
+      function renderPaginationUI() {
+        const startItem = totalCount === 0 ? 0 : ((currentPage - 1) * limit) + 1;
+        const endItem = Math.min(currentPage * limit, totalCount);
+        paginationSummary.textContent = `Showing ${startItem}–${endItem} of ${totalCount} transactions`;
+
+        if (window.pagination) {
+          window.pagination.render(paginationControls, {
+            currentPage: currentPage,
+            totalPages: totalPages,
+            onPageChange: (newPage) => {
+              fetchTransactions(newPage);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          });
+        }
+      }
+
+      // 8. Export CSV Functionality
+      exportCsvBtn.addEventListener('click', () => {
+        if (!currentLoans.length) {
+          if (window.toast) window.toast.warning('No records available to export');
+          return;
+        }
+
+        const headers = ['Loan ID', 'Book Title', 'Author', 'Member', 'Membership #', 'Issue Date', 'Due Date', 'Return Date', 'Status', 'Fine Amount'];
+        const csvRows = [headers.join(',')];
+
+        currentLoans.forEach(l => {
+          const row = [
+            `#LN-${l.loan_id || l.id}`,
+            `"${(l.title || (l.book && l.book.title) || '').replace(/"/g, '""')}"`,
+            `"${(l.author || (l.book && l.book.author) || '').replace(/"/g, '""')}"`,
+            `"${(l.member_name || (l.user && l.user.name) || '').replace(/"/g, '""')}"`,
+            `"${l.membership_number || ''}"`,
+            l.issue_date || l.issued_at || '',
+            l.due_date || '',
+            l.returned_at || l.return_date || '',
+            l.status || '',
+            l.fine_amount || 0
+          ];
+          csvRows.push(row.join(','));
+        });
+
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `smartlib_circulation_export_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        if (window.toast) window.toast.success('Circulation CSV report downloaded');
+      });
+
+      // 9. Print
+      printBtn.addEventListener('click', () => {
+        window.print();
+      });
+
+      // 10. Filter Handlers
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          fetchTransactions(1);
+        }, 350);
+      });
+
+      statusFilter.addEventListener('change', () => fetchTransactions(1));
+      dateFrom.addEventListener('change', () => fetchTransactions(1));
+      dateTo.addEventListener('change', () => fetchTransactions(1));
+
+      resetBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        statusFilter.value = '';
+        dateFrom.value = '';
+        dateTo.value = '';
+        fetchTransactions(1);
+      });
+
+      // 11. Initial Load
+      loadLoanStats();
+      fetchTransactions(1);
+    });
+  </script>
+</body>
+</html>

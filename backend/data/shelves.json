@@ -1,0 +1,18 @@
+[
+  { "id": 1, "shelf_code": "FIC-01", "name": "Ground Floor Fiction Bay", "floor": 1, "section": "Fiction", "capacity": 50, "occupied": 12 },
+  { "id": 2, "shelf_code": "FIC-02", "name": "Ground Floor Indian Fiction", "floor": 1, "section": "Fiction", "capacity": 50, "occupied": 21 },
+  { "id": 3, "shelf_code": "SCI-01", "name": "Ground Floor Science Hub", "floor": 1, "section": "Science", "capacity": 50, "occupied": 14 },
+  { "id": 4, "shelf_code": "SCI-02", "name": "Ground Floor Physics & Astronomy", "floor": 1, "section": "Science", "capacity": 50, "occupied": 18 },
+  { "id": 5, "shelf_code": "TECH-01", "name": "Floor 2 Tech Innovation", "floor": 2, "section": "Technology", "capacity": 50, "occupied": 15 },
+  { "id": 6, "shelf_code": "CS-01", "name": "Floor 2 Software Engineering", "floor": 2, "section": "Programming", "capacity": 60, "occupied": 28 },
+  { "id": 7, "shelf_code": "CS-02", "name": "Floor 2 Algorithms & Web", "floor": 2, "section": "Programming", "capacity": 60, "occupied": 30 },
+  { "id": 8, "shelf_code": "ENG-01", "name": "Floor 2 Core Engineering", "floor": 2, "section": "Engineering", "capacity": 50, "occupied": 16 },
+  { "id": 9, "shelf_code": "MATH-01", "name": "Floor 2 Pure & Applied Maths", "floor": 2, "section": "Mathematics", "capacity": 50, "occupied": 17 },
+  { "id": 10, "shelf_code": "HIST-01", "name": "Floor 3 Historical Archives", "floor": 3, "section": "History", "capacity": 45, "occupied": 14 },
+  { "id": 11, "shelf_code": "BIO-01", "name": "Floor 3 Memoirs & Biographies", "floor": 3, "section": "Biography", "capacity": 45, "occupied": 19 },
+  { "id": 12, "shelf_code": "BIZ-01", "name": "Floor 3 Economics & Finance", "floor": 3, "section": "Business", "capacity": 50, "occupied": 22 },
+  { "id": 13, "shelf_code": "START-01", "name": "Floor 3 Startups & Venture", "floor": 3, "section": "Entrepreneurship", "capacity": 40, "occupied": 11 },
+  { "id": 14, "shelf_code": "EXAM-01", "name": "Floor 3 Civil Services & Aptitude", "floor": 3, "section": "Competitive Exams", "capacity": 60, "occupied": 35 },
+  { "id": 15, "shelf_code": "LIT-01", "name": "Floor 3 Classical Literature", "floor": 3, "section": "Literature", "capacity": 50, "occupied": 18 }
+]
+

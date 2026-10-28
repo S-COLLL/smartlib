@@ -1,138 +1,178 @@
-// REST client for the SmartLib backend.
-// When the frontend is served by the Express server the API is same-origin.
-// When opened from a separate static server (e.g. VS Code Live Server on :5500)
-// it falls back to http://localhost:5000. Override with localStorage 'smartlib-api'.
-function apiOrigin() {
-  try {
-    const custom = localStorage.getItem('smartlib-api');
-    if (custom) return custom;
-  } catch {
-    /* storage unavailable */
-  }
-  if (location.protocol === 'file:' || ['5500', '5501', '8080', '3000'].includes(location.port)) return 'http://localhost:5000';
-  return '';
-}
-
-export const API_BASE = `${apiOrigin().replace(/\/$/, '')}/api`;
-
-const TOKEN_KEY = 'smartlib-token';
-const USER_KEY = 'smartlib-user';
-
-export const session = {
-  get token() {
-    try {
-      return localStorage.getItem(TOKEN_KEY);
-    } catch {
-      return null;
-    }
-  },
-  get user() {
-    try {
-      return JSON.parse(localStorage.getItem(USER_KEY) || 'null');
-    } catch {
-      return null;
-    }
-  },
-  save(token, user) {
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  },
-  setUser(user) {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  },
-  clear() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-  },
-};
-
-export class ApiError extends Error {
-  constructor(message, status, details) {
-    super(message);
-    this.status = status;
-    this.details = details;
-  }
-}
-
-function qs(params) {
-  if (!params) return '';
-  const u = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== '') u.append(k, v);
-  });
-  const s = u.toString();
-  return s ? `?${s}` : '';
-}
-
 /**
- * Demo mode: the whole backend runs in the browser (js/demo/demo-api.js) with data in
- * localStorage. On automatically for static hosting (GitHub Pages), or with ?demo=1.
- * Leave it with ?demo=0.
+ * SMARTLIB - API Client Module
+ * Handles HTTP requests, JWT token attachment, 401 auto-redirection, and file uploads.
  */
-function detectDemo() {
-  try {
-    const flag = new URLSearchParams(location.search).get('demo');
-    if (flag === '1') localStorage.setItem('smartlib-demo', '1');
-    if (flag === '0') localStorage.removeItem('smartlib-demo');
-    return location.hostname.endsWith('github.io') || localStorage.getItem('smartlib-demo') === '1';
-  } catch {
-    return location.hostname.endsWith('github.io');
-  }
-}
-export const DEMO_MODE = detectDemo();
-let demoModule = null;
 
-function handleUnauthorized(status, path) {
-  if (status === 401 && !path.startsWith('/auth/login')) {
-    session.clear();
-    const here = location.pathname.split('/').pop() || 'index.html';
-    if (here !== 'index.html') location.href = `index.html?next=${encodeURIComponent(here + location.search)}&expired=1`;
-  }
-}
+(function () {
+  'use strict';
 
-async function demoCall(method, path, body, params) {
-  demoModule = demoModule || (await import('./demo/demo-api.js'));
-  try {
-    return await demoModule.demoRequest(method, path, { body, params, token: session.token });
-  } catch (e) {
-    if (!e.status) throw new ApiError(e.message || 'Demo error', 500);
-    handleUnauthorized(e.status, path);
-    throw new ApiError(e.message, e.status, e.details);
-  }
-}
-export async function resetDemoData() {
-  demoModule = demoModule || (await import('./demo/demo-api.js'));
-  demoModule.resetDemo();
-}
+  const getApiBase = () => {
+    if (typeof window !== 'undefined') {
+      const port = window.location.port;
+      // If running from file:// or another local dev server (e.g. Live Server on 5500, 8080, etc.), route to backend
+      if (window.location.protocol === 'file:' || (port && port !== '3000' && port !== '5000')) {
+        return 'http://localhost:3000/api/v1';
+      }
+    }
+    return '/api/v1';
+  };
 
-async function request(method, path, { body, params } = {}) {
-  if (DEMO_MODE) return demoCall(method, path, body, params);
-  const headers = { Accept: 'application/json' };
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
-  if (session.token) headers.Authorization = `Bearer ${session.token}`;
-  let res;
-  try {
-    res = await fetch(`${API_BASE}${path}${qs(params)}`, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
-  } catch {
-    throw new ApiError('Cannot reach the SmartLib server. Is the backend running?', 0);
-  }
-  let data = null;
-  try {
-    data = await res.json();
-  } catch {
-    /* non-JSON */
-  }
-  if (!res.ok) {
-    handleUnauthorized(res.status, path);
-    throw new ApiError(data?.message || `Request failed (${res.status})`, res.status, data?.details);
-  }
-  return data;
-}
+  const api = {
+    /**
+     * Base request dispatcher
+     * @param {string} endpoint 
+     * @param {RequestInit} options 
+     * @returns {Promise<any>}
+     */
+    async request(endpoint, options = {}) {
+      const base = getApiBase();
+      const url = `${base}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+      const token = localStorage.getItem('smartlib_token');
+      
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
 
-export const api = {
-  get: (path, params) => request('GET', path, { params }),
-  post: (path, body) => request('POST', path, { body: body ?? {} }),
-  put: (path, body) => request('PUT', path, { body: body ?? {} }),
-  patch: (path, body) => request('PATCH', path, { body: body ?? {} }),
-  del: (path) => request('DELETE', path),
-};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      try {
+        const response = await fetch(url, {
+          ...options,
+          headers
+        });
+
+        let data = {};
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          const text = await response.text();
+          data = { message: text };
+        }
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('smartlib_token');
+            localStorage.removeItem('smartlib_user');
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('login')) {
+              window.location.href = '/pages/login.html';
+            }
+          }
+          throw { status: response.status, ...data };
+        }
+
+        return data;
+      } catch (err) {
+        if (err && err.status) {
+          throw err;
+        }
+        // Network or parse error
+        throw { status: 0, message: err.message || 'Network connection failed' };
+      }
+    },
+
+    /**
+     * GET request with query parameter serialization
+     */
+    get(endpoint, params) {
+      let query = '';
+      if (params) {
+        const filteredParams = {};
+        Object.keys(params).forEach(key => {
+          if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+            filteredParams[key] = params[key];
+          }
+        });
+        const qs = new URLSearchParams(filteredParams).toString();
+        if (qs) query = '?' + qs;
+      }
+      return api.request(endpoint + query, { method: 'GET' });
+    },
+
+    /**
+     * POST request
+     */
+    post(endpoint, body) {
+      return api.request(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+    },
+
+    /**
+     * PUT request
+     */
+    put(endpoint, body) {
+      return api.request(endpoint, {
+        method: 'PUT',
+        body: JSON.stringify(body)
+      });
+    },
+
+    /**
+     * PATCH request
+     */
+    patch(endpoint, body) {
+      return api.request(endpoint, {
+        method: 'PATCH',
+        body: JSON.stringify(body)
+      });
+    },
+
+    /**
+     * DELETE request
+     */
+    delete(endpoint) {
+      return api.request(endpoint, { method: 'DELETE' });
+    },
+
+    /**
+     * Multipart file upload (skips json content type header)
+     */
+    async upload(endpoint, formData) {
+      const url = `${getApiBase()}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+      const token = localStorage.getItem('smartlib_token');
+      const headers = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: formData
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('smartlib_token');
+            localStorage.removeItem('smartlib_user');
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('login')) {
+              window.location.href = '/pages/login.html';
+            }
+          }
+          throw { status: response.status, ...data };
+        }
+        return data;
+      } catch (err) {
+        if (err && err.status) throw err;
+        throw { status: 0, message: err.message || 'File upload failed' };
+      }
+    }
+  };
+
+  // Expose to window
+  if (typeof window !== 'undefined') {
+    window.api = api;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  }
+})();

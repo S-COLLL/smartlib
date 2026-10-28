@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Reviews · SMARTLIB</title>
+  <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .my-review-card {
+      background-color: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      transition: all var(--transition-base);
+      position: relative;
+    }
+    .my-review-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .my-review-cover {
+      width: 72px;
+      height: 104px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .my-review-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .star-select-btn {
+      background: none;
+      border: none;
+      font-size: 1.75rem;
+      cursor: pointer;
+      color: var(--border);
+      transition: transform var(--transition-fast), color var(--transition-fast);
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .star-select-btn.active {
+      color: #FBBF24;
+    }
+    .star-select-btn:hover {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header" id="top-header"></header>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <ul class="breadcrumb" aria-label="Breadcrumb">
+            <li class="breadcrumb-item"><a href="/pages/member-dashboard.html">Dashboard</a></li>
+            <li class="breadcrumb-separator">/</li>
+            <li class="breadcrumb-item active" aria-current="page">My Reviews</li>
+          </ul>
+          <h1 class="page-title">My Book Reviews</h1>
+          <p class="page-subtitle">Manage your ratings, reader thoughts, and book evaluations shared with the community.</p>
+        </div>
+        <div class="page-actions">
+          <a href="/pages/my-books.html" class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            <span>Review Borrowed Books</span>
+          </a>
+          <a href="/pages/books.html" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Browse Library</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Reviews Summary Bar -->
+      <div class="flex-between flex-wrap gap-4" style="margin-bottom: var(--space-6);">
+        <div class="flex-align-center gap-3">
+          <span class="text-sm font-semibold" style="color: var(--text);">Total Reviews:</span>
+          <span class="badge badge-primary font-mono text-sm" id="review-total-badge">0</span>
+        </div>
+        <div class="search-bar" style="max-width: 320px;">
+          <input type="text" class="form-control" id="reviews-search-filter" placeholder="Search your reviews..." />
+        </div>
+      </div>
+
+      <!-- Reviews Grid Container -->
+      <section id="reviews-grid" class="content-grid">
+        <!-- Skeleton Loaders -->
+        <div class="skeleton-card">
+          <div class="flex gap-4">
+            <div class="skeleton skeleton-image" style="width: 72px; height: 104px;"></div>
+            <div class="flex-col flex-1">
+              <div class="skeleton skeleton-text title" style="width: 60%;"></div>
+              <div class="skeleton skeleton-text short" style="width: 40%;"></div>
+              <div class="skeleton skeleton-text" style="height: 40px; margin-top: 10px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="flex gap-4">
+            <div class="skeleton skeleton-image" style="width: 72px; height: 104px;"></div>
+            <div class="flex-col flex-1">
+              <div class="skeleton skeleton-text title" style="width: 60%;"></div>
+              <div class="skeleton skeleton-text short" style="width: 40%;"></div>
+              <div class="skeleton skeleton-text" style="height: 40px; margin-top: 10px;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Specific Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Guard route
+      if (!window.auth || !window.auth.requireAuth(['member'])) {
+        return;
+      }
+
+      // 2. Navigation init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      const grid = document.getElementById('reviews-grid');
+      const totalBadge = document.getElementById('review-total-badge');
+      let reviews = [];
+
+      // 3. Fetch reviews
+      async function loadReviews() {
+        try {
+          let res;
+          try {
+            res = await window.api.get('/reviews/my');
+          } catch (e) {
+            // Fallback: Try /reviews with userId or empty
+            console.warn('GET /reviews/my error, attempting fallback:', e);
+            res = { success: false, data: [] };
+          }
+
+          reviews = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+          totalBadge.textContent = String(reviews.length);
+
+          if (reviews.length === 0) {
+            grid.innerHTML = `
+              <div style="grid-column: 1 / -1;">
+                ${window.components.emptyState(
+                  'star',
+                  "You Haven't Reviewed Any Books Yet",
+                  'Share your thoughts with other readers. Read books from your library and leave reviews and star ratings!',
+                  'View Your Borrowed Books',
+                  '/pages/my-books.html'
+                )}
+              </div>
+            `;
+            return;
+          }
+
+          renderReviews(reviews);
+        } catch (err) {
+          console.error('Failed to load member reviews:', err);
+          grid.innerHTML = `
+            <div class="card p-6 text-center" style="grid-column: 1 / -1;">
+              <p class="text-danger font-semibold">Unable to load reviews: ${err.message || 'Server error'}</p>
+              <button class="btn btn-secondary btn-sm" onclick="location.reload()">Retry</button>
+            </div>
+          `;
+        }
+      }
+
+      // 4. Render Reviews
+      function renderReviews(items) {
+        let html = '';
+        items.forEach(review => {
+          const id = review.id || review._id;
+          const bookId = review.bookId || review.book_id || '';
+          const title = review.title || review.book_title || 'Untitled Book';
+          const author = review.author || review.book_author || 'Unknown Author';
+          const cover = review.cover_image || review.book_cover || null;
+          const rating = Number(review.rating) || 5;
+          const comment = review.comment || review.content || '';
+          const date = window.format ? window.format.date(review.createdAt || review.created_at) : 'recently';
+
+          const coverEl = window.format ? window.format.bookCover(cover, title) : `<img src="${cover || ''}" alt="${title}" />`;
+          const starHtml = window.format ? window.format.starRating(rating) : `★ ${rating}`;
+
+          html += `
+            <div class="my-review-card" data-review-id="${id}">
+              <div class="flex gap-4" style="margin-bottom: var(--space-4);">
+                <div class="my-review-cover">${coverEl}</div>
+                <div class="flex-col flex-1" style="min-width: 0;">
+                  <h3 class="text-base font-bold text-truncate" title="${title}" style="margin-bottom: 2px;">
+                    <a href="/pages/book-details.html?id=${bookId}" style="color: inherit; text-decoration: none;">${title}</a>
+                  </h3>
+                  <p class="text-xs text-secondary text-truncate" style="margin-bottom: var(--space-2);">by ${author}</p>
+                  <div>${starHtml}</div>
+                  <span class="text-xs text-muted" style="margin-top: 4px;">Reviewed: ${date}</span>
+                </div>
+              </div>
+
+              <div class="flex-1" style="margin-bottom: var(--space-4);">
+                <p class="text-sm text-secondary" style="line-height: var(--leading-relaxed); margin-bottom: 0; white-space: pre-line;">${comment}</p>
+              </div>
+
+              <div class="flex-between" style="padding-top: var(--space-3); border-top: 1px solid var(--border-light); margin-top: auto;">
+                <a href="/pages/book-details.html?id=${bookId}" class="btn btn-ghost btn-sm" title="View Book Catalog Details">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span>Book Page</span>
+                </a>
+                <div class="flex-align-center gap-2">
+                  <button class="btn btn-secondary btn-sm edit-review-btn" data-id="${id}" title="Edit your review">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                    <span>Edit</span>
+                  </button>
+                  <button class="btn btn-ghost btn-sm delete-review-btn" data-id="${id}" style="color: var(--danger);" title="Delete review">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        grid.innerHTML = html;
+
+        // Wire Edit & Delete Buttons
+        grid.querySelectorAll('.edit-review-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const targetReview = reviews.find(r => (r.id || r._id) == id);
+            if (targetReview) openEditModal(targetReview);
+          });
+        });
+
+        grid.querySelectorAll('.delete-review-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            const confirmed = await window.modal.confirm(
+              'Delete Review?',
+              'Are you sure you want to delete this book review? This action cannot be undone.',
+              { confirmClass: 'btn-danger', confirmText: 'Yes, Delete' }
+            );
+            if (!confirmed) return;
+
+            try {
+              await window.api.delete(`/reviews/${id}`);
+              window.toast.success('Your review has been deleted.', 'Review Removed');
+              loadReviews();
+            } catch (err) {
+              window.toast.error(err.message || 'Failed to delete review.', 'Error');
+            }
+          });
+        });
+      }
+
+      // 5. Edit Modal
+      function openEditModal(review) {
+        const id = review.id || review._id;
+        const currentRating = Number(review.rating) || 5;
+        const currentComment = review.comment || review.content || '';
+        const title = review.title || review.book_title || 'Book Review';
+
+        let selectedScore = currentRating;
+
+        const modalBody = document.createElement('div');
+        modalBody.innerHTML = `
+          <div class="form-group" style="margin-bottom: var(--space-4);">
+            <label class="form-label">Book: <strong>${title}</strong></label>
+            <div class="flex-align-center gap-1" id="modal-star-selector" style="margin-top: 4px;">
+              ${[1, 2, 3, 4, 5].map(star => `
+                <button type="button" class="star-select-btn ${star <= selectedScore ? 'active' : ''}" data-score="${star}">&#9733;</button>
+              `).join('')}
+              <span id="modal-rating-label" class="text-sm font-bold" style="margin-left: 8px; color: var(--text);">${selectedScore}.0 / 5</span>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="edit-review-comment">Your Review / Reader Thoughts <span class="required">*</span></label>
+            <textarea class="form-textarea" id="edit-review-comment" rows="5" placeholder="Share your experience reading this book...">${currentComment}</textarea>
+            <span class="form-error" id="edit-review-error" style="display: none;"></span>
+          </div>
+        `;
+
+        // Star click listeners
+        const stars = modalBody.querySelectorAll('.star-select-btn');
+        stars.forEach(s => {
+          s.addEventListener('click', () => {
+            selectedScore = parseInt(s.getAttribute('data-score'), 10);
+            stars.forEach(st => {
+              const val = parseInt(st.getAttribute('data-score'), 10);
+              st.classList.toggle('active', val <= selectedScore);
+            });
+            modalBody.querySelector('#modal-rating-label').textContent = `${selectedScore}.0 / 5`;
+          });
+        });
+
+        window.modal.open({
+          title: 'Edit Your Review',
+          content: modalBody,
+          size: 'md',
+          confirmText: 'Save Changes',
+          onConfirm: async () => {
+            const commentInput = modalBody.querySelector('#edit-review-comment');
+            const errorEl = modalBody.querySelector('#edit-review-error');
+            const newComment = commentInput.value.trim();
+
+            if (!newComment) {
+              errorEl.textContent = 'Please write a brief comment for your review.';
+              errorEl.style.display = 'block';
+              return false; // Prevent closing
+            }
+
+            try {
+              await window.api.put(`/reviews/${id}`, {
+                rating: selectedScore,
+                comment: newComment
+              });
+              window.toast.success('Your review was successfully updated!', 'Saved');
+              loadReviews();
+              window.modal.close();
+            } catch (err) {
+              errorEl.textContent = err.message || 'Failed to update review.';
+              errorEl.style.display = 'block';
+            }
+            return false;
+          }
+        });
+      }
+
+      // 6. Search filter listener
+      const filterInput = document.getElementById('reviews-search-filter');
+      if (filterInput) {
+        filterInput.addEventListener('input', (e) => {
+          const q = e.target.value.toLowerCase().trim();
+          const filtered = reviews.filter(r => {
+            const t = (r.title || r.book_title || '').toLowerCase();
+            const a = (r.author || r.book_author || '').toLowerCase();
+            const c = (r.comment || '').toLowerCase();
+            return t.includes(q) || a.includes(q) || c.includes(q);
+          });
+          renderReviews(filtered);
+        });
+      }
+
+      // Initial load
+      loadReviews();
+    });
+  </script>
+</body>
+</html>
+

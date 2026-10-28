@@ -1,176 +1,227 @@
-/* ============================ Responsive layout ============================ */
+/**
+ * SMARTLIB - Responsive Breakpoints & Device Adaptations
+ */
 
-@media (max-width: 1280px) {
-  .grid-4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* ==========================================================================
+   1. Large Desktop (1200px and up)
+   ========================================================================== */
+@media (min-width: 1200px) {
+  .books-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
+
   .stats-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
-@media (max-width: 1024px) {
+/* ==========================================================================
+   2. Desktop (992px - 1199px)
+   ========================================================================== */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .books-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-detail-layout {
+    grid-template-columns: 280px 1fr;
+    gap: var(--space-6);
+  }
+}
+
+/* ==========================================================================
+   3. Tablet (768px - 991px)
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 991px) {
+  :root {
+    --sidebar-width: 240px;
+  }
+
+  .main-content {
+    padding: calc(var(--header-height) + var(--space-4)) var(--space-5) var(--space-10) var(--space-5);
+  }
+
+  .books-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-sidebar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-cover-col {
+    max-width: 300px;
+    margin: 0 auto var(--space-6) auto;
+  }
+}
+
+/* ==========================================================================
+   4. Small Tablet / Large Mobile (576px - 767px)
+   ========================================================================== */
+@media (max-width: 767px) {
+  :root {
+    --header-height: 56px;
+  }
+
+  /* Sidebar transforms into off-canvas drawer */
   .sidebar {
     transform: translateX(-100%);
-    width: var(--sidebar-w) !important;
-    box-shadow: var(--shadow-xl);
+    width: 280px;
+    z-index: var(--z-modal);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.4);
   }
-  body.sidebar-open .sidebar {
-    transform: none;
-  }
-  body.sidebar-collapsed .brand-text,
-  body.sidebar-collapsed .nav-link span,
-  body.sidebar-collapsed .nav-group-label {
-    display: revert;
-  }
-  .main,
-  body.sidebar-collapsed .main {
-    margin-left: 0;
-  }
-  .menu-toggle {
-    display: inline-grid;
-  }
-  .sidebar-foot {
-    display: none;
-  }
-  .grid-3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .route-grid {
-    grid-template-columns: 1fr;
-  }
-  .book-form {
-    grid-template-columns: 1fr;
-  }
-  .bf-cover {
-    position: static;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .bf-cover .cover-lg {
-    width: 150px;
-  }
-}
 
-@media (max-width: 768px) {
-  .page {
-    padding: 18px 16px 40px;
+  .sidebar.mobile-open {
+    transform: translateX(0);
   }
-  .page-head h1 {
-    font-size: 26px;
+
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(33, 17, 61, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: calc(var(--z-modal) - 1);
   }
-  .topbar {
-    padding: 0 12px;
-    gap: 8px;
+
+  .sidebar.mobile-open ~ .sidebar-backdrop,
+  body.sidebar-open .sidebar-backdrop {
+    display: block;
   }
-  .global-search kbd,
-  .hide-sm {
-    display: none !important;
+
+  .top-header {
+    left: 0 !important;
+    padding: 0 var(--space-4);
   }
-  .global-search input {
-    padding-right: 12px;
+
+  .main-content {
+    margin-left: 0 !important;
+    padding: calc(var(--header-height) + var(--space-4)) var(--space-4) calc(var(--mobile-nav-height) + var(--space-8)) var(--space-4);
   }
-  .grid-2,
-  .grid-3,
-  .grid-4 {
-    grid-template-columns: 1fr;
+
+  .mobile-nav {
+    display: flex;
   }
-  .span-2 {
-    grid-column: auto;
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
   }
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-  .form-grid,
-  .form-grid-3 {
-    grid-template-columns: 1fr;
-  }
-  .form-grid .field[style*='span'] {
-    grid-column: auto !important;
-  }
-  .location-path {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .kv {
-    grid-template-columns: 1fr 1fr;
-  }
-  .modal-backdrop {
-    padding: 0;
-    place-items: end center;
-  }
-  .modal {
-    max-height: 92vh;
-    border-radius: 18px 18px 0 0;
-    animation-name: sheetIn;
-  }
-  @keyframes sheetIn {
-    from {
-      transform: translateY(40px);
-      opacity: 0;
-    }
-  }
-  .modal-foot .btn {
-    flex: 1;
-  }
-  .btn,
-  .page-btn,
-  .chip {
-    min-height: 40px;
-  }
-  .btn-sm {
-    min-height: 36px;
-  }
-  .table td,
-  .table th {
-    padding: 10px 12px;
-  }
-  .toast-stack {
-    right: 12px;
-    left: 12px;
-    bottom: 12px;
-    width: auto;
-  }
-  .method-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+
   .page-actions {
     width: 100%;
+    justify-content: flex-start;
   }
-  .page-actions .btn {
-    flex: 1;
+
+  .books-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
   }
-  .table-toolbar {
-    padding: 12px;
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
   }
-  .notif-panel {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    top: calc(var(--topbar-h) + 6px);
-    width: auto;
+
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-sidebar-layout,
+  .grid-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-filters {
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+  }
+
+  .modal {
+    max-width: 95vw;
+    margin: var(--space-2);
   }
 }
 
-@media (max-width: 480px) {
+/* ==========================================================================
+   5. Mobile Phones (< 576px)
+   ========================================================================== */
+@media (max-width: 575px) {
+  .page-title {
+    font-size: var(--text-2xl);
+  }
+
+  .books-grid {
+    grid-template-columns: 1fr;
+  }
+
   .stats-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 12px !important;
+    grid-template-columns: 1fr;
   }
-  .stat-value {
-    font-size: 22px;
-  }
+
   .stat-card {
-    padding: 14px;
+    padding: var(--space-4);
   }
-  .stat-icon {
-    width: 32px;
-    height: 32px;
+
+  .search-bar {
+    max-width: 100%;
   }
-  #scanBtn {
-    display: none;
+
+  .shelf-row {
+    height: 160px;
+    gap: 6px;
   }
-  .location-path {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  .book-spine {
+    width: 28px;
+  }
+
+  .toast-container {
+    left: var(--space-4);
+    right: var(--space-4);
+    bottom: calc(var(--mobile-nav-height) + var(--space-4));
+    width: auto;
+  }
+
+  .table th, .table td {
+    padding: var(--space-3) var(--space-3);
+  }
+
+  .btn {
+    min-height: 44px; /* Accessible touch target */
+  }
+
+  .card-header, .card-body, .card-footer {
+    padding: var(--space-4);
   }
 }

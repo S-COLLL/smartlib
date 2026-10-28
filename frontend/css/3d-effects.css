@@ -1,0 +1,463 @@
+/**
+ * SMARTLIB - 3D Visual Effects, Depth Layers & Animations
+ * High-performance CSS transforms, perspective, and lighting effects (~220+ lines)
+ */
+
+/* ==========================================================================
+   1. Perspective Containers & 3D Space
+   ========================================================================== */
+.perspective-container {
+  perspective: var(--perspective);
+  perspective-origin: center center;
+  transform-style: preserve-3d;
+}
+
+.perspective-container-far {
+  perspective: var(--perspective-far);
+  perspective-origin: center center;
+  transform-style: preserve-3d;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* ==========================================================================
+   2. 3D Depth Layers
+   ========================================================================== */
+.depth-layer-1 {
+  transform: translateZ(var(--depth-z-1));
+  transition: transform var(--transition-base);
+}
+
+.depth-layer-2 {
+  transform: translateZ(var(--depth-z-2));
+  transition: transform var(--transition-base);
+}
+
+.depth-layer-3 {
+  transform: translateZ(var(--depth-z-3));
+  transition: transform var(--transition-base);
+}
+
+.depth-layer-4 {
+  transform: translateZ(var(--depth-z-4));
+  transition: transform var(--transition-base);
+}
+
+/* ==========================================================================
+   3. Floating Elements
+   ========================================================================== */
+.float-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
+  will-change: transform, box-shadow;
+}
+
+.float-3d:hover {
+  transform: translateY(-8px) translateZ(15px);
+  box-shadow: var(--shadow-float);
+}
+
+.hero-float {
+  animation: hero-floating 5s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.hero-float-delay-1 {
+  animation: hero-floating 5.5s ease-in-out 0.8s infinite alternate;
+}
+
+.hero-float-delay-2 {
+  animation: hero-floating 6s ease-in-out 1.6s infinite alternate;
+}
+
+/* ==========================================================================
+   4. 3D Tilt Card Component
+   ========================================================================== */
+.tilt-card {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform var(--transition-tilt), box-shadow var(--transition-tilt);
+  will-change: transform;
+}
+
+.tilt-card-inner {
+  transform-style: preserve-3d;
+  width: 100%;
+  height: 100%;
+}
+
+.tilt-card .tilt-glare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  mix-blend-mode: overlay;
+}
+
+.tilt-card:hover .tilt-glare {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   5. 3D Book Card System
+   ========================================================================== */
+.book-card-3d {
+  position: relative;
+  background-color: var(--surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-3d);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.book-card-3d:hover {
+  transform: translateY(-8px) rotateX(3deg) rotateY(-2deg);
+  box-shadow: 0 16px 36px -6px rgba(109, 40, 217, 0.22), 0 6px 14px -3px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary-300);
+}
+
+.book-cover-container {
+  position: relative;
+  width: 100%;
+  padding-top: 135%; /* 3:4 aspect ratio */
+  background: var(--bg-alt);
+  overflow: hidden;
+}
+
+.book-cover-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.book-card-3d:hover .book-cover-img {
+  transform: scale(1.05);
+}
+
+/* Book 3D Spine and Emboss Shine */
+.book-cover-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 16px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0.15) 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.book-cover-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-25deg);
+  z-index: 3;
+  pointer-events: none;
+  transition: left 0.75s ease;
+}
+
+.book-card-3d:hover .book-cover-shine {
+  left: 180%;
+}
+
+.book-status-pill {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 4;
+}
+
+.book-card-details {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.book-card-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--text);
+  line-height: var(--leading-snug);
+  margin-bottom: var(--space-1);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.75rem;
+}
+
+.book-card-author {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.book-card-shelf {
+  font-size: var(--text-xs);
+  color: var(--primary-800);
+  background-color: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  margin-bottom: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+}
+
+.book-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+/* ==========================================================================
+   6. 3D Shelf Rack Visualization
+   ========================================================================== */
+.shelf-3d {
+  perspective: 1200px;
+  background: linear-gradient(180deg, #1A0D30 0%, #2E1554 100%);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), var(--shadow-2xl);
+  border: 2px solid rgba(139, 92, 246, 0.25);
+}
+
+.shelf-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 0 var(--space-4);
+  height: 200px;
+  border-bottom: 14px solid #4C268F;
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
+  position: relative;
+  margin-bottom: var(--space-8);
+  transform-style: preserve-3d;
+}
+
+.shelf-row::after {
+  content: "";
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(180deg, #241145 0%, #150A29 100%);
+}
+
+.shelf-label-tag {
+  position: absolute;
+  bottom: -32px;
+  left: var(--space-4);
+  background-color: var(--accent);
+  color: var(--secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-xs);
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+}
+
+.book-spine {
+  width: 36px;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  cursor: pointer;
+  transform-origin: bottom center;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  box-shadow: -2px 0 6px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-spine:hover {
+  transform: translateY(-16px) scale(1.06);
+  filter: brightness(1.2);
+  z-index: 10;
+}
+
+.book-spine.active-locator {
+  animation: glow-pulse 1.8s infinite alternate;
+  z-index: 15;
+}
+
+.book-spine-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 0.7rem;
+  font-weight: var(--font-semibold);
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 80%;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   7. Glowing Locator Pin for 3D Map
+   ========================================================================== */
+.glow-pin {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: var(--primary);
+  border: 3px solid #FFFFFF;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.35), 0 0 25px rgba(124, 58, 237, 0.7);
+  animation: locator-pulse 2s infinite;
+  z-index: var(--z-sticky);
+  cursor: pointer;
+}
+
+.glow-pin::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid var(--primary);
+}
+
+/* ==========================================================================
+   8. Glass Dashboard Widget
+   ========================================================================== */
+.glass-widget {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  box-shadow: 0 10px 30px rgba(109, 40, 217, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* ==========================================================================
+   9. Entry & Transition Animations
+   ========================================================================== */
+.card-enter {
+  animation: card-appear 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* Stagger helper classes */
+.delay-1 { animation-delay: 60ms; }
+.delay-2 { animation-delay: 120ms; }
+.delay-3 { animation-delay: 180ms; }
+.delay-4 { animation-delay: 240ms; }
+.delay-5 { animation-delay: 300ms; }
+
+/* ==========================================================================
+   10. Keyframes
+   ========================================================================== */
+@keyframes hero-floating {
+  0% {
+    transform: translateY(0px) rotateX(0deg) rotateY(0deg);
+  }
+  100% {
+    transform: translateY(-16px) rotateX(2deg) rotateY(-3deg);
+  }
+}
+
+@keyframes glow-pulse {
+  0% {
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+    filter: brightness(1);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(167, 139, 250, 0.9), 0 0 50px rgba(109, 40, 217, 0.6);
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes locator-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.95);
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 0 0 16px rgba(124, 58, 237, 0);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.95);
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+  }
+}
+
+@keyframes card-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

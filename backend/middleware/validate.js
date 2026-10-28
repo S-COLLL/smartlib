@@ -1,50 +1,150 @@
-const mongoose = require('mongoose');
-const { ApiError } = require('../utils/helpers');
+const { body, validationResult } = require('express-validator');
 
-/**
- * Tiny declarative validator for request bodies.
- * rules: { field: { required, type: 'string'|'number'|'email'|'date'|'id', min, max, enum, label } }
- */
-function validateBody(rules, { partial = false } = {}) {
-  return (req, _res, next) => {
-    const errors = {};
-    const body = req.body || {};
-    for (const [field, r] of Object.entries(rules)) {
-      const label = r.label || field;
-      const v = body[field];
-      const empty = v === undefined || v === null || v === '';
-      if (empty) {
-        if (r.required && !partial) errors[field] = `${label} is required`;
-        continue;
-      }
-      switch (r.type) {
-        case 'number': {
-          const n = Number(v);
-          if (Number.isNaN(n)) errors[field] = `${label} must be a number`;
-          else if (r.min !== undefined && n < r.min) errors[field] = `${label} must be at least ${r.min}`;
-          else if (r.max !== undefined && n > r.max) errors[field] = `${label} must be at most ${r.max}`;
-          else body[field] = n;
-          break;
-        }
-        case 'email':
-          if (!/^\S+@\S+\.\S+$/.test(String(v))) errors[field] = `${label} is invalid`;
-          break;
-        case 'date':
-          if (Number.isNaN(new Date(v).getTime())) errors[field] = `${label} is not a valid date`;
-          break;
-        case 'id':
-          if (!mongoose.isValidObjectId(v)) errors[field] = `${label} is invalid`;
-          break;
-        default:
-          if (typeof v !== 'string') errors[field] = `${label} must be text`;
-          else if (r.min !== undefined && v.trim().length < r.min) errors[field] = `${label} must be at least ${r.min} characters`;
-          else if (r.max !== undefined && v.length > r.max) errors[field] = `${label} must be at most ${r.max} characters`;
-      }
-      if (!errors[field] && r.enum && !r.enum.includes(v)) errors[field] = `${label} must be one of: ${r.enum.join(', ')}`;
+const validate = (validations) => {
+  return async (req, res, next) => {
+    for (const validation of validations) {
+      await validation.run(req);
     }
-    if (Object.keys(errors).length) return next(new ApiError(400, Object.values(errors)[0], errors));
-    next();
-  };
-}
 
-module.exports = { validateBody };
+    const errors = validationResult(req);
+    if (errors.isEmpty()) {
+      return next();
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: errors.array()[0].msg,
+      errors: errors.array().map((e) => ({
+        field: e.path || e.param,
+        message: e.msg,
+      })),
+    });
+  };
+};
+
+const validateRegister = [
+  body('name')
+    .trim()
+    .isLength({ min: 2 })
+    .withMessage('Name must be at least 2 characters long'),
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('A valid email address is required'),
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
+];
+
+const validateLogin = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('A valid email address is required'),
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required'),
+];
+
+const validateBook = [
+  body('title')
+    .trim()
+    .notEmpty()
+    .withMessage('Book title is required'),
+  body('isbn')
+    .trim()
+    .notEmpty()
+    .withMessage('ISBN is required'),
+  body('author')
+    .trim()
+    .notEmpty()
+    .withMessage('Author name is required'),
+  body('total_copies')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Total copies must be at least 1'),
+  body('price')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Price must be a non-negative number'),
+];
+
+const validateMember = [
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Member name is required'),
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('A valid email address is required'),
+  body('phone')
+    .optional()
+    .trim(),
+];
+
+const validateLoan = [
+  body('book_id')
+    .custom((val, { req }) => val || req.body.bookId)
+    .withMessage('Book ID is required'),
+  body('member_id')
+    .custom((val, { req }) => val || req.body.memberId)
+    .withMessage('Member ID is required'),
+];
+
+const validateReservation = [
+  body('book_id')
+    .custom((val, { req }) => val || req.body.bookId || val === 0)
+    .withMessage('Book ID is required'),
+];
+
+const validateCategory = [
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Category name is required'),
+];
+
+const validateShelf = [
+  body('shelf_code')
+    .trim()
+    .notEmpty()
+    .withMessage('Shelf code is required'),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Shelf name is required'),
+  body('floor')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Floor must be a non-negative integer'),
+  body('capacity')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Capacity must be at least 1'),
+];
+
+const validateReview = [
+  body('rating')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Rating must be an integer between 1 and 5'),
+  body('comment')
+    .trim()
+    .notEmpty()
+    .withMessage('Review comment is required')
+    .isLength({ max: 1000 })
+    .withMessage('Review comment cannot exceed 1000 characters'),
+];
+
+module.exports = {
+  validate,
+  validateRegister,
+  validateLogin,
+  validateBook,
+  validateMember,
+  validateLoan,
+  validateReservation,
+  validateCategory,
+  validateShelf,
+  validateReview,
+};

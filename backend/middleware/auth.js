@@ -1,36 +1,110 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const { ApiError, asyncHandler } = require('../utils/helpers');
 
-const STAFF_ROLES = ['admin', 'librarian', 'staff'];
-
-const protect = asyncHandler(async (req, _res, next) => {
-  const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token) throw new ApiError(401, 'Not authenticated. Please log in.');
-  let payload;
-  try {
-    payload = jwt.verify(token, process.env.JWT_SECRET);
-  } catch {
-    throw new ApiError(401, 'Session expired or invalid. Please log in again.');
+function extractToken(req) {
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  if (!authHeader) return null;
+  const parts = authHeader.split(' ');
+  if (parts.length === 2 && /^Bearer$/i.test(parts[0])) {
+    return parts[1];
   }
-  const user = await User.findById(payload.id);
-  if (!user || !user.isActive) throw new ApiError(401, 'Account not found or disabled.');
-  req.user = user;
-  next();
-});
+  return null;
+}
 
-// Role-based authorization: authorize('admin', 'librarian')
-const authorize =
-  (...roles) =>
-  (req, _res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return next(new ApiError(403, `This action requires one of the roles: ${roles.join(', ')}`));
+function authenticateToken(req, res, next) {
+  const token = extractToken(req);
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Access denied: No token provided',
+    });
+  }
+
+  const secret = process.env.JWT_SECRET || 'smartlib_default_secret_key_2026';
+
+  jwt.verify(token, secret, (err, decoded) => {
+    if (err) {
+      const message =
+        err.name === 'TokenExpiredError'
+          ? 'Token has expired. Please log in again.'
+          : 'Invalid authentication token.';
+      return res.status(401).json({
+        success: false,
+        message,
+      });
+    }
+
+    req.user = {
+      id: decoded.id || decoded.userId,
+      role: decoded.role || 'member',
+      name: decoded.name || '',
+      email: decoded.email || '',
+      memberId: decoded.memberId || null,
+    };
+
+    next();
+  });
+}
+
+function authorizeRoles(...roles) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+      });
+    }
+
+    // Role check: admin has universal access, or role must match one of the allowed roles
+    const userRole = (req.user.role || '').toLowerCase();
+    const allowed = roles.map((r) => r.toLowerCase());
+
+    if (userRole === 'admin' || allowed.includes(userRole)) {
+      return next();
+    }
+
+    // Support alias: 'student' maps to 'member', 'staff' maps to 'librarian'
+    if (
+      (userRole === 'member' && allowed.includes('student')) ||
+      (userRole === 'student' && allowed.includes('member')) ||
+      (userRole === 'librarian' && allowed.includes('staff')) ||
+      (userRole === 'staff' && allowed.includes('librarian'))
+    ) {
+      return next();
+    }
+
+    return res.status(403).json({
+      success: false,
+      message: `Access denied: requires one of the roles: ${roles.join(', ')}`,
+    });
+  };
+}
+
+function optionalAuth(req, res, next) {
+  const token = extractToken(req);
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  const secret = process.env.JWT_SECRET || 'smartlib_default_secret_key_2026';
+  jwt.verify(token, secret, (err, decoded) => {
+    if (!err && decoded) {
+      req.user = {
+        id: decoded.id || decoded.userId,
+        role: decoded.role || 'member',
+        name: decoded.name || '',
+        email: decoded.email || '',
+        memberId: decoded.memberId || null,
+      };
+    } else {
+      req.user = null;
     }
     next();
-  };
+  });
+}
 
-const staffOnly = authorize(...STAFF_ROLES);
-const isStaff = (user) => user && STAFF_ROLES.includes(user.role);
-
-module.exports = { protect, authorize, staffOnly, isStaff, STAFF_ROLES };
+module.exports = {
+  authenticateToken,
+  authorizeRoles,
+  optionalAuth,
+};

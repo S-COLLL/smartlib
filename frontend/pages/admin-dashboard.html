@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard · SMARTLIB</title>
+  <meta name="description" content="SMARTLIB Library Management System - Administrative Dashboard & Analytics">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .dashboard-grid-2 {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: var(--space-6);
+      margin-bottom: var(--space-8);
+    }
+    @media (max-width: 1024px) {
+      .dashboard-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+    .stats-grid-6 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5);
+      margin-bottom: var(--space-8);
+    }
+    @media (max-width: 960px) {
+      .stats-grid-6 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 600px) {
+      .stats-grid-6 {
+        grid-template-columns: 1fr;
+      }
+    }
+    .alert-banner {
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(239, 68, 68, 0.15) 100%);
+      border: 1px solid var(--danger-border);
+      border-left: 5px solid var(--danger);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      margin-bottom: var(--space-8);
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.08);
+      display: none;
+    }
+    .alert-banner.active {
+      display: block;
+      animation: slide-up 0.3s ease-out;
+    }
+    .chart-container {
+      background-color: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-3d);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .chart-bar-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--space-3);
+      gap: var(--space-3);
+    }
+    .chart-bar-label {
+      width: 130px;
+      font-size: var(--text-xs);
+      font-weight: var(--font-medium);
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chart-bar-track {
+      flex: 1;
+      height: 12px;
+      background: var(--bg-alt);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      position: relative;
+    }
+    .chart-bar-fill {
+      height: 100%;
+      background: var(--gradient-primary);
+      border-radius: var(--radius-full);
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .chart-bar-fill.accent {
+      background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+    }
+    .chart-bar-fill.warning {
+      background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%);
+    }
+    .chart-bar-fill.danger {
+      background: linear-gradient(90deg, #EF4444 0%, #DC2626 100%);
+    }
+    .chart-bar-value {
+      width: 44px;
+      text-align: right;
+      font-size: var(--text-xs);
+      font-weight: var(--font-bold);
+      color: var(--text);
+    }
+    .popular-books-scroll {
+      display: flex;
+      gap: var(--space-4);
+      overflow-x: auto;
+      padding-bottom: var(--space-3);
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .popular-book-card {
+      flex: 0 0 170px;
+      scroll-snap-align: start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .popular-book-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-300);
+    }
+    .popular-book-thumb {
+      width: 80px;
+      height: 110px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      margin-bottom: var(--space-2);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .activity-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: relative;
+    }
+    .activity-timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      position: relative;
+    }
+    .activity-icon-bubble {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #fff;
+      font-size: 0.85rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .activity-meta {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Role-based Dynamic Sidebar -->
+    <aside id="sidebar"></aside>
+
+    <!-- Top Header Navigation -->
+    <header id="top-header"></header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Breadcrumb -->
+      <nav aria-label="Breadcrumb">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/pages/admin-dashboard.html">SMARTLIB</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+        </ul>
+      </nav>
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="page-title-group">
+          <h1 class="page-title">Library Overview &amp; Analytics</h1>
+          <p class="page-subtitle">Real-time circulation metrics, inventory status, and administrative operations.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary btn-sm" id="refresh-dashboard-btn" title="Refresh all statistics">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+            <span>Refresh</span>
+          </button>
+          <a href="/pages/issue-return.html" class="btn btn-primary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>
+            <span>Issue / Return</span>
+          </a>
+          <a href="/pages/book-form.html" class="btn btn-secondary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            <span>Add Book</span>
+          </a>
+          <a href="/pages/member-form.html" class="btn btn-secondary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
+            <span>Add Member</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- Overdue Alert Banner -->
+      <section id="overdue-alert-container" class="alert-banner" aria-live="polite">
+        <div class="flex-between flex-wrap gap-3">
+          <div class="flex-align-center gap-3">
+            <div class="stat-icon danger sm" style="width: 2.5rem; height: 2.5rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div>
+              <h4 class="font-bold text-danger" style="margin-bottom: 2px;" id="overdue-banner-heading">Urgent Overdue Items</h4>
+              <p class="text-xs text-secondary" style="margin-bottom: 0;" id="overdue-banner-sub">There are loans that have passed their due date requiring immediate attention.</p>
+            </div>
+          </div>
+          <div class="flex-align-center gap-2">
+            <button class="btn btn-danger btn-sm" id="toggle-overdue-list-btn">View Overdue Items</button>
+            <a href="/pages/issue-return.html" class="btn btn-secondary btn-sm">Circulation Desk</a>
+          </div>
+        </div>
+        <div id="overdue-details-box" style="display:none; margin-top: var(--space-4); border-top: 1px solid var(--danger-border); padding-top: var(--space-3);">
+          <div class="table-container" style="max-height: 240px; margin-bottom: 0;">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Borrower</th>
+                  <th>Due Date</th>
+                  <th>Days Overdue</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="overdue-items-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Skeletons Container -->
+      <div id="dashboard-loading-skeleton">
+        <div class="stats-grid-6">
+          <div class="skeleton" style="height: 104px;"></div>
+          <div class="skeleton" style="height: 104px;"></div>
+          <div class="skeleton" style="height: 104px;"></div>
+          <div class="skeleton" style="height: 104px;"></div>
+          <div class="skeleton" style="height: 104px;"></div>
+          <div class="skeleton" style="height: 104px;"></div>
+        </div>
+        <div class="dashboard-grid-2">
+          <div class="skeleton" style="height: 320px;"></div>
+          <div class="skeleton" style="height: 320px;"></div>
+        </div>
+      </div>
+
+      <!-- Main Dashboard Content (Hidden until loaded) -->
+      <div id="dashboard-main-content" style="display: none;">
+        <!-- Top Stats Row (6 Cards in 2 Rows / Responsive Grid) -->
+        <section class="stats-grid-6" id="dashboard-stats-row">
+          <!-- Total Books -->
+          <div class="stat-card card-3d">
+            <div class="stat-icon primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-total-books">0</span>
+              <span class="stat-label">Total Books</span>
+              <div class="stat-trend positive">
+                <span>In Catalog</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Available Books -->
+          <div class="stat-card card-3d">
+            <div class="stat-icon success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-available-books">0</span>
+              <span class="stat-label">Available Copies</span>
+              <div class="stat-trend positive">
+                <span>Ready to Borrow</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Issued Books -->
+          <div class="stat-card card-3d">
+            <div class="stat-icon info">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-issued-books">0</span>
+              <span class="stat-label">Currently Issued</span>
+              <div class="stat-trend" style="color: var(--primary);">
+                <span>Active Loans</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Members -->
+          <div class="stat-card card-3d">
+            <div class="stat-icon primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-total-members">0</span>
+              <span class="stat-label">Registered Members</span>
+              <div class="stat-trend positive" id="stat-active-members-trend">
+                <span>Active</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Overdue Loans -->
+          <div class="stat-card card-3d">
+            <div class="stat-icon danger">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value text-danger" id="stat-overdue-loans">0</span>
+              <span class="stat-label">Overdue Loans</span>
+              <div class="stat-trend negative">
+                <span>Immediate Followup</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unpaid Fines Total -->
+          <div class="stat-card card-3d">
+            <div class="stat-icon warning">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"/><path d="M16 8h-8"/><path d="M16 12h-8"/><path d="M12 16H8"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-unpaid-fines">Rs. 0</span>
+              <span class="stat-label">Unpaid Fines Total</span>
+              <div class="stat-trend" style="color: var(--warning-dark);">
+                <span id="stat-total-fines-assessed">Outstanding</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Charts Section (Div-based CSS/JS Charts) -->
+        <section class="dashboard-grid-2">
+          <!-- Category Distribution Chart -->
+          <div class="chart-container">
+            <div class="flex-between mb-4">
+              <h3 class="card-header-title">Category Distribution</h3>
+              <span class="text-xs text-secondary">Book Counts by Genre</span>
+            </div>
+            <div id="category-chart-bars" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <!-- Dynamic bars injected here -->
+            </div>
+          </div>
+
+          <!-- Circulation & Loan Status Chart -->
+          <div class="chart-container">
+            <div class="flex-between mb-4">
+              <h3 class="card-header-title">Circulation Status</h3>
+              <span class="text-xs text-secondary">Inventory Allocation</span>
+            </div>
+            <div id="circulation-chart-bars" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <!-- Dynamic circulation breakdown bars injected here -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Popular Books Row -->
+        <section class="card mb-8">
+          <div class="card-header">
+            <h3 class="card-header-title">Most Popular Books</h3>
+            <span class="text-xs text-secondary">Highest Circulation Frequency</span>
+          </div>
+          <div class="card-body">
+            <div class="popular-books-scroll" id="popular-books-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Lower Section: Recent Loans & Recent Activity -->
+        <div class="dashboard-grid-2">
+          <!-- Recent Loans Table -->
+          <section class="card">
+            <div class="card-header">
+              <h3 class="card-header-title">Recent Loans</h3>
+              <a href="/pages/transactions.html" class="btn btn-ghost btn-sm">View All &rarr;</a>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="table-container" style="border: none; border-radius: 0; box-shadow: none; margin-bottom: 0;">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Book</th>
+                      <th>Borrower</th>
+                      <th>Issued</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-loans-tbody">
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- Recent Activity Timeline -->
+          <section class="card">
+            <div class="card-header">
+              <h3 class="card-header-title">Recent Activity</h3>
+              <a href="/pages/activity-logs.html" class="btn btn-ghost btn-sm">View All &rarr;</a>
+            </div>
+            <div class="card-body">
+              <div class="activity-timeline" id="recent-activity-timeline">
+                <!-- Dynamic timeline items -->
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules in strict order -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Enforce Role Authentication Guard
+      if (!window.auth || !window.auth.requireAuth(['admin', 'librarian'])) {
+        return;
+      }
+
+      // 2. Initialize Navigation Component
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      // 3. Elements
+      const skeleton = document.getElementById('dashboard-loading-skeleton');
+      const mainContent = document.getElementById('dashboard-main-content');
+      const refreshBtn = document.getElementById('refresh-dashboard-btn');
+      const overdueBanner = document.getElementById('overdue-alert-container');
+      const toggleOverdueBtn = document.getElementById('toggle-overdue-list-btn');
+      const overdueBox = document.getElementById('overdue-details-box');
+
+      // Toggle Overdue list dropdown
+      if (toggleOverdueBtn && overdueBox) {
+        toggleOverdueBtn.addEventListener('click', () => {
+          const isHidden = overdueBox.style.display === 'none';
+          overdueBox.style.display = isHidden ? 'block' : 'none';
+          toggleOverdueBtn.textContent = isHidden ? 'Hide Overdue Items' : 'View Overdue Items';
+        });
+      }
+
+      // Refresh Button
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          loadDashboardData(true);
+        });
+      }
+
+      // 4. Fetch and Render Dashboard Data
+      async function loadDashboardData(isRefresh = false) {
+        try {
+          if (!isRefresh) {
+            skeleton.style.display = 'block';
+            mainContent.style.display = 'none';
+          } else {
+            refreshBtn.classList.add('loading');
+          }
+
+          const res = await window.api.get('/stats/dashboard');
+          const data = (res && res.data) ? res.data : (res || {});
+
+          renderDashboardStats(data);
+          renderOverdueAlert(data);
+          renderCategoryChart(data.categoryStats || []);
+          renderCirculationChart(data);
+          renderPopularBooks(data.popularBooks || []);
+          renderRecentLoans(data.recentLoans || []);
+          renderRecentActivity(data.recentActivity || []);
+
+          skeleton.style.display = 'none';
+          mainContent.style.display = 'block';
+
+          // Initialize 3D effects on new elements
+          if (window.effects) {
+            window.effects.init();
+          }
+
+          if (isRefresh && window.toast) {
+            window.toast.success('Dashboard metrics refreshed successfully');
+          }
+        } catch (err) {
+          console.error('Failed to load admin dashboard stats:', err);
+          if (window.toast) {
+            window.toast.error(err.message || 'Failed to fetch dashboard metrics. Please retry.');
+          }
+          skeleton.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon text-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <h3 class="empty-state-title">Unable to Load Dashboard</h3>
+              <p class="empty-state-desc">${err.message || 'The server could not process the analytics request.'}</p>
+              <button class="btn btn-primary" onclick="location.reload()">Retry Connection</button>
+            </div>
+          `;
+        } finally {
+          if (refreshBtn) refreshBtn.classList.remove('loading');
+        }
+      }
+
+      // 5. Render Top Metrics
+      function renderDashboardStats(data) {
+        const fmt = window.format || {
+          number: n => Number(n || 0).toLocaleString(),
+          currency: n => 'Rs. ' + Number(n || 0).toFixed(2)
+        };
+
+        const totalBooks = data.totalBooks ?? 0;
+        const availBooks = data.availableBooks ?? 0;
+        const issuedBooks = data.issuedBooks ?? 0;
+        const totalMembers = data.totalMembers ?? 0;
+        const activeMembers = data.activeMembers ?? 0;
+        const overdueLoans = data.overdueLoans ?? 0;
+        const unpaidFines = data.unpaidFines ?? 0;
+        const totalFines = data.totalFines ?? 0;
+
+        document.getElementById('stat-total-books').textContent = fmt.number(totalBooks);
+        document.getElementById('stat-available-books').textContent = fmt.number(availBooks);
+        document.getElementById('stat-issued-books').textContent = fmt.number(issuedBooks);
+        document.getElementById('stat-total-members').textContent = fmt.number(totalMembers);
+        document.getElementById('stat-active-members-trend').innerHTML = `<span>${fmt.number(activeMembers)} Active Members</span>`;
+        document.getElementById('stat-overdue-loans').textContent = fmt.number(overdueLoans);
+        document.getElementById('stat-unpaid-fines').textContent = fmt.currency(unpaidFines);
+        document.getElementById('stat-total-fines-assessed').textContent = `Total assessed: ${fmt.currency(totalFines)}`;
+      }
+
+      // 6. Render Overdue Alerts Banner
+      function renderOverdueAlert(data) {
+        const count = data.overdueLoans || 0;
+        const loans = Array.isArray(data.recentLoans) ? data.recentLoans.filter(l => l.status === 'OVERDUE' || (l.status === 'ISSUED' && new Date(l.due_date) < new Date())) : [];
+
+        if (count > 0 || loans.length > 0) {
+          overdueBanner.classList.add('active');
+          document.getElementById('overdue-banner-heading').textContent = `Attention: ${count || loans.length} Overdue Loan(s) Detected`;
+          document.getElementById('overdue-banner-sub').textContent = `Active overdue books require borrower notification and penalty assessment.`;
+
+          const tbody = document.getElementById('overdue-items-tbody');
+          if (loans.length > 0) {
+            tbody.innerHTML = loans.map(loan => {
+              const bookTitle = (loan.title || (loan.book && loan.book.title) || 'Book');
+              const memberName = loan.member_name || (loan.user && loan.user.name) || 'Member';
+              const dueDate = window.format ? window.format.date(loan.due_date) : loan.due_date;
+              const dueTime = new Date(loan.due_date).getTime();
+              const nowTime = new Date().getTime();
+              const daysDiff = Math.max(1, Math.floor((nowTime - dueTime) / (1000 * 60 * 60 * 24)));
+
+              return `
+                <tr>
+                  <td class="font-semibold">${bookTitle}</td>
+                  <td>${memberName}</td>
+                  <td class="text-xs font-mono">${dueDate}</td>
+                  <td><span class="badge badge-overdue">${daysDiff} day(s) overdue</span></td>
+                  <td>
+                    <a href="/pages/issue-return.html" class="btn btn-secondary btn-sm" title="Return Book">Return</a>
+                  </td>
+                </tr>
+              `;
+            }).join('');
+          } else {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">View circulation desk for full list of overdue loans.</td></tr>`;
+          }
+        } else {
+          overdueBanner.classList.remove('active');
+        }
+      }
+
+      // 7. Render Category Distribution (Div Bar Chart)
+      function renderCategoryChart(categories) {
+        const container = document.getElementById('category-chart-bars');
+        if (!container) return;
+
+        if (!categories || categories.length === 0) {
+          container.innerHTML = `<p class="text-center text-muted text-sm my-4">No category statistics available.</p>`;
+          return;
+        }
+
+        // Determine max count for proportional bar width
+        const maxCount = Math.max(...categories.map(c => Number(c.count || c.book_count || 1)), 1);
+
+        let html = '';
+        categories.slice(0, 7).forEach(cat => {
+          const name = cat.category_name || cat.name || 'General';
+          const count = Number(cat.count || cat.book_count || 0);
+          const percent = Math.min(100, Math.max(8, Math.round((count / maxCount) * 100)));
+
+          html += `
+            <div class="chart-bar-row">
+              <span class="chart-bar-label" title="${name}">${name}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill" style="width: ${percent}%;"></div>
+              </div>
+              <span class="chart-bar-value">${count}</span>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      }
+
+      // 8. Render Circulation Chart
+      function renderCirculationChart(data) {
+        const container = document.getElementById('circulation-chart-bars');
+        if (!container) return;
+
+        const total = Math.max(Number(data.totalBooks || 1), 1);
+        const avail = Number(data.availableBooks || 0);
+        const issued = Number(data.issuedBooks || 0);
+        const overdue = Number(data.overdueLoans || 0);
+
+        const availPct = Math.round((avail / total) * 100);
+        const issuedPct = Math.round((issued / total) * 100);
+        const overduePct = Math.round((overdue / total) * 100);
+
+        container.innerHTML = `
+          <div class="chart-bar-row">
+            <span class="chart-bar-label">Available</span>
+            <div class="chart-bar-track">
+              <div class="chart-bar-fill accent" style="width: ${Math.max(availPct, 5)}%;"></div>
+            </div>
+            <span class="chart-bar-value">${avail} (${availPct}%)</span>
+          </div>
+          <div class="chart-bar-row">
+            <span class="chart-bar-label">On Loan</span>
+            <div class="chart-bar-track">
+              <div class="chart-bar-fill" style="width: ${Math.max(issuedPct, 5)}%;"></div>
+            </div>
+            <span class="chart-bar-value">${issued} (${issuedPct}%)</span>
+          </div>
+          <div class="chart-bar-row">
+            <span class="chart-bar-label">Overdue</span>
+            <div class="chart-bar-track">
+              <div class="chart-bar-fill danger" style="width: ${Math.max(overduePct, 5)}%;"></div>
+            </div>
+            <span class="chart-bar-value">${overdue} (${overduePct}%)</span>
+          </div>
+          <div class="mt-4 pt-3" style="border-top: 1px solid var(--border-light); display: flex; justify-content: space-around;">
+            <div class="text-center">
+              <span class="text-xs text-muted d-block">Catalog Capacity</span>
+              <span class="font-bold text-sm text-primary">${total} Total</span>
+            </div>
+            <div class="text-center">
+              <span class="text-xs text-muted d-block">Circulation Ratio</span>
+              <span class="font-bold text-sm text-success">${Math.round((issued / total) * 100)}% active</span>
+            </div>
+          </div>
+        `;
+      }
+
+      // 9. Render Popular Books Carousel
+      function renderPopularBooks(popular) {
+        const container = document.getElementById('popular-books-container');
+        if (!container) return;
+
+        if (!popular || popular.length === 0) {
+          container.innerHTML = `<p class="text-center text-muted text-sm w-100 py-4">No popular books data available.</p>`;
+          return;
+        }
+
+        let html = '';
+        popular.slice(0, 10).forEach(book => {
+          const title = book.title || 'Untitled';
+          const author = book.author || 'Unknown';
+          const borrows = book.borrow_count ?? book.loans_count ?? 1;
+          const cover = book.cover_image;
+          const coverImg = cover ? 
+            `<img src="${cover}" alt="${title}" class="popular-book-thumb" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'110\\' fill=\\'%236D28D9\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%236D28D9\\'/><text x=\\'50%\\' y=\\'50%\\' fill=\\'white\\' font-size=\\'10\\' text-anchor=\\'middle\\'>Book</text></svg>';">` :
+            `<div class="popular-book-thumb flex-center" style="background: var(--gradient-primary); color: #fff;"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg></div>`;
+
+          html += `
+            <div class="popular-book-card">
+              ${coverImg}
+              <span class="font-semibold text-xs text-truncate w-100" title="${title}">${title}</span>
+              <span class="text-xs text-secondary text-truncate w-100 mb-2">${author}</span>
+              <span class="badge badge-primary font-mono text-xs">${borrows} borrow${borrows === 1 ? '' : 's'}</span>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      }
+
+      // 10. Render Recent Loans Table
+      function renderRecentLoans(loans) {
+        const tbody = document.getElementById('recent-loans-tbody');
+        if (!tbody) return;
+
+        if (!loans || loans.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No recent loans found.</td></tr>`;
+          return;
+        }
+
+        const fmt = window.format || {
+          date: d => d ? new Date(d).toLocaleDateString() : '—',
+          statusBadge: s => `<span class="badge">${s}</span>`
+        };
+
+        let html = '';
+        loans.slice(0, 10).forEach(loan => {
+          const bookTitle = loan.title || (loan.book && loan.book.title) || 'Untitled Book';
+          const memberName = loan.member_name || (loan.user && loan.user.name) || 'Member';
+          const memNumber = loan.membership_number ? `<span class="text-xs font-mono text-muted">(${loan.membership_number})</span>` : '';
+          const issueDate = fmt.date(loan.issue_date || loan.issued_at);
+          const dueDate = fmt.date(loan.due_date);
+          const status = loan.status || 'ISSUED';
+          const statusBadge = fmt.statusBadge(status);
+
+          html += `
+            <tr>
+              <td>
+                <span class="font-semibold text-sm" style="color: var(--text);">${bookTitle}</span>
+              </td>
+              <td>
+                <div class="flex-col">
+                  <span class="text-sm font-medium">${memberName}</span>
+                  ${memNumber}
+                </div>
+              </td>
+              <td class="text-xs">${issueDate}</td>
+              <td class="text-xs font-mono">${dueDate}</td>
+              <td>${statusBadge}</td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = html;
+      }
+
+      // 11. Render Activity Timeline
+      function renderRecentActivity(logs) {
+        const container = document.getElementById('recent-activity-timeline');
+        if (!container) return;
+
+        if (!logs || logs.length === 0) {
+          container.innerHTML = `<p class="text-center text-muted text-sm py-4">No recent activity logs.</p>`;
+          return;
+        }
+
+        const fmt = window.format || {
+          relativeTime: d => d ? new Date(d).toLocaleTimeString() : 'recently'
+        };
+
+        const actionIcons = {
+          book_create: { icon: 'book', color: 'primary' },
+          book_update: { icon: 'edit', color: 'info' },
+          book_delete: { icon: 'trash', color: 'danger' },
+          loan_issue: { icon: 'barcode', color: 'success' },
+          loan_return: { icon: 'check', color: 'success' },
+          fine_pay: { icon: 'receipt', color: 'warning' },
+          member_create: { icon: 'users', color: 'primary' },
+          default: { icon: 'activity', color: 'secondary' }
+        };
+
+        let html = '';
+        logs.slice(0, 10).forEach(log => {
+          const action = log.action || 'activity';
+          const actor = log.actorName || (log.user && log.user.name) || 'System';
+          const role = log.actorRole || 'ADMIN';
+          const desc = log.description || `${actor} executed ${action}`;
+          const time = fmt.relativeTime(log.createdAt || log.created_at);
+
+          const conf = actionIcons[action] || actionIcons.default;
+          const iconSvg = (window.navigation && window.navigation.icons[conf.icon]) ? 
+            window.navigation.icons[conf.icon] : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`;
+
+          html += `
+            <div class="activity-timeline-item">
+              <div class="activity-icon-bubble stat-icon ${conf.color} sm" style="width: 2.25rem; height: 2.25rem;">
+                ${iconSvg}
+              </div>
+              <div class="flex-col flex-1">
+                <div class="flex-between">
+                  <span class="text-xs font-semibold" style="color: var(--text);">${actor} <span class="badge badge-secondary" style="font-size: 0.65rem; padding: 2px 6px;">${role}</span></span>
+                  <span class="activity-meta">${time}</span>
+                </div>
+                <p class="text-xs text-secondary mb-0" style="margin-top: 2px;">${desc}</p>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      }
+
+      // Initial data load
+      loadDashboardData();
+    });
+  </script>
+</body>
+</html>

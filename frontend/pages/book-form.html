@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Editor · SMARTLIB</title>
+  <meta name="description" content="SMARTLIB Library Management System - Add and Edit Book Form">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .form-layout-2col {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--space-8);
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .form-layout-2col {
+        grid-template-columns: 1fr;
+      }
+    }
+    .cover-dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      text-align: center;
+      background-color: var(--bg-alt);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+    .cover-dropzone:hover, .cover-dropzone.dragover {
+      border-color: var(--primary);
+      background-color: var(--primary-50);
+    }
+    .cover-preview-img {
+      width: 140px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      margin: 0 auto var(--space-3);
+      display: block;
+    }
+    .shelf-preview-card {
+      background: var(--primary-50);
+      border: 1px solid var(--primary-200);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      margin-top: var(--space-2);
+      font-size: var(--text-xs);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside id="sidebar"></aside>
+
+    <!-- Top Header -->
+    <header id="top-header"></header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Breadcrumb -->
+      <nav aria-label="Breadcrumb">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/pages/admin-dashboard.html">SMARTLIB</a></li>
+          <li class="breadcrumb-item"><a href="/pages/admin-books.html">Book Management</a></li>
+          <li class="breadcrumb-item active" id="form-breadcrumb-title" aria-current="page">Add New Book</li>
+        </ul>
+      </nav>
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="page-title-group">
+          <h1 class="page-title" id="page-heading">Add New Book</h1>
+          <p class="page-subtitle" id="page-subheading">Enter complete bibliographic records and assign shelf locations.</p>
+        </div>
+        <div class="page-actions">
+          <a href="/pages/admin-books.html" class="btn btn-secondary btn-sm">
+            &larr; Back to Catalog
+          </a>
+        </div>
+      </header>
+
+      <!-- Form Container -->
+      <form id="book-edit-form" novalidate>
+        <div class="form-layout-2col">
+          <!-- Left Column: Bibliographic Details -->
+          <div class="card p-6">
+            <h3 class="card-header-title mb-4">Bibliographic Information</h3>
+
+            <!-- Title -->
+            <div class="form-group">
+              <label class="form-label" for="book-title">
+                Book Title <span class="required">*</span>
+              </label>
+              <input type="text" class="form-control" id="book-title" name="title" required placeholder="e.g. Introduction to Algorithms" />
+            </div>
+
+            <!-- Author -->
+            <div class="form-group">
+              <label class="form-label" for="book-author">
+                Author(s) <span class="required">*</span>
+              </label>
+              <input type="text" class="form-control" id="book-author" name="author" required placeholder="e.g. Thomas H. Cormen, Charles E. Leiserson" />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+              <!-- ISBN -->
+              <div class="form-group">
+                <label class="form-label" for="book-isbn">ISBN Number</label>
+                <input type="text" class="form-control font-mono" id="book-isbn" name="isbn" placeholder="e.g. 9780262033848" />
+                <span class="form-hint">Supports ISBN-10 or ISBN-13</span>
+              </div>
+
+              <!-- Category -->
+              <div class="form-group">
+                <label class="form-label" for="book-category">Category / Genre <span class="required">*</span></label>
+                <select class="form-select" id="book-category" name="category_id" required>
+                  <option value="">Select Category...</option>
+                  <!-- Dynamically populated from /categories -->
+                </select>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--space-4);">
+              <!-- Publisher -->
+              <div class="form-group">
+                <label class="form-label" for="book-publisher">Publisher</label>
+                <input type="text" class="form-control" id="book-publisher" name="publisher" placeholder="e.g. MIT Press" />
+              </div>
+
+              <!-- Publication Year -->
+              <div class="form-group">
+                <label class="form-label" for="book-year">Publication Year</label>
+                <input type="number" class="form-control font-mono" id="book-year" name="publication_year" min="1500" max="2099" placeholder="2022" />
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+              <!-- Language -->
+              <div class="form-group">
+                <label class="form-label" for="book-language">Language</label>
+                <select class="form-select" id="book-language" name="language">
+                  <option value="English" selected>English</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <!-- Pages -->
+              <div class="form-group">
+                <label class="form-label" for="book-pages">Number of Pages</label>
+                <input type="number" class="form-control font-mono" id="book-pages" name="pages" min="1" placeholder="e.g. 420" />
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+              <label class="form-label" for="book-description">Summary / Description</label>
+              <textarea class="form-textarea" id="book-description" name="description" rows="5" placeholder="Provide an informative synopsis, table of contents, or subject summary..."></textarea>
+            </div>
+          </div>
+
+          <!-- Right Column: Inventory, Shelf & Cover Media -->
+          <div class="flex-col gap-6">
+            <!-- Cover Image Upload & Preview Card -->
+            <div class="card p-6">
+              <h3 class="card-header-title mb-4">Book Cover Art</h3>
+              <div class="cover-dropzone" id="cover-dropzone">
+                <img id="cover-preview" class="cover-preview-img" style="display: none;" alt="Cover preview" />
+                <div id="cover-placeholder-content">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-primary mb-2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                  <p class="text-sm font-semibold mb-1" style="color: var(--text);">Upload Cover Image</p>
+                  <p class="text-xs text-muted mb-3">PNG, JPG, WEBP up to 5MB</p>
+                  <button type="button" class="btn btn-secondary btn-sm" id="select-cover-btn">Browse Files</button>
+                </div>
+                <input type="file" id="cover-file-input" accept="image/*" style="display: none;" />
+              </div>
+
+              <!-- Direct URL Alternative -->
+              <div class="form-group mt-4 mb-0">
+                <label class="form-label text-xs" for="cover-url-input">Or paste Cover Image URL</label>
+                <input type="url" class="form-control text-xs" id="cover-url-input" name="cover_image" placeholder="https://example.com/cover.jpg" />
+              </div>
+            </div>
+
+            <!-- Inventory & Shelf Allocation Card -->
+            <div class="card p-6">
+              <h3 class="card-header-title mb-4">Inventory &amp; Shelf Location</h3>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                <!-- Total Copies -->
+                <div class="form-group">
+                  <label class="form-label" for="book-total-copies">Total Copies <span class="required">*</span></label>
+                  <input type="number" class="form-control font-mono" id="book-total-copies" name="total_copies" min="1" value="1" required />
+                </div>
+
+                <!-- Available Copies (Editable on edit mode) -->
+                <div class="form-group">
+                  <label class="form-label" for="book-available-copies">Available Copies</label>
+                  <input type="number" class="form-control font-mono" id="book-available-copies" name="available_copies" min="0" value="1" />
+                </div>
+              </div>
+
+              <!-- Shelf Location Selector -->
+              <div class="form-group mb-0">
+                <label class="form-label" for="book-shelf-id">
+                  Shelf Location <span class="required">*</span>
+                </label>
+                <select class="form-select" id="book-shelf-id" name="shelf_id" required>
+                  <option value="">Select Shelf Location...</option>
+                  <!-- Populated from /shelves grouped by Floor > Section > Rack > Shelf -->
+                </select>
+                <div class="shelf-preview-card" id="shelf-preview-box" style="display: none;">
+                  <span class="font-bold text-primary" id="shelf-preview-text"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="card p-6">
+              <div class="flex-col gap-3">
+                <button type="submit" class="btn btn-primary btn-lg btn-full" id="save-book-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span id="save-btn-text">Save Book</span>
+                </button>
+                <a href="/pages/admin-books.html" class="btn btn-secondary btn-md btn-full">
+                  Cancel
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules in strict order -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Role Protection Guard
+      if (!window.auth || !window.auth.requireAuth(['admin', 'librarian'])) {
+        return;
+      }
+
+      // 2. Navigation Init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      // 3. Inspect Query Parameters for Edit Mode
+      const urlParams = new URLSearchParams(window.location.search);
+      const bookId = urlParams.get('id');
+      const isEditMode = !!bookId;
+
+      // DOM Elements
+      const pageHeading = document.getElementById('page-heading');
+      const pageSubheading = document.getElementById('page-subheading');
+      const breadcrumbTitle = document.getElementById('form-breadcrumb-title');
+      const form = document.getElementById('book-edit-form');
+      const saveBtn = document.getElementById('save-book-btn');
+      const saveBtnText = document.getElementById('save-btn-text');
+
+      const categorySelect = document.getElementById('book-category');
+      const shelfSelect = document.getElementById('book-shelf-id');
+      const shelfPreviewBox = document.getElementById('shelf-preview-box');
+      const shelfPreviewText = document.getElementById('shelf-preview-text');
+
+      const coverDropzone = document.getElementById('cover-dropzone');
+      const coverFileInput = document.getElementById('cover-file-input');
+      const selectCoverBtn = document.getElementById('select-cover-btn');
+      const coverPreview = document.getElementById('cover-preview');
+      const coverPlaceholderContent = document.getElementById('cover-placeholder-content');
+      const coverUrlInput = document.getElementById('cover-url-input');
+
+      const totalCopiesInput = document.getElementById('book-total-copies');
+      const availableCopiesInput = document.getElementById('book-available-copies');
+
+      if (isEditMode) {
+        pageHeading.textContent = 'Edit Book';
+        pageSubheading.textContent = 'Update book metadata, adjust physical copy inventory, and reassign shelf rack.';
+        breadcrumbTitle.textContent = 'Edit Book';
+        saveBtnText.textContent = 'Update Book';
+      }
+
+      // Auto-sync available copies when total copies changes on new book
+      totalCopiesInput.addEventListener('input', () => {
+        if (!isEditMode) {
+          availableCopiesInput.value = totalCopiesInput.value;
+        }
+      });
+
+      // 4. Load Categories & Shelves in parallel
+      let loadedShelves = [];
+      await Promise.all([loadCategories(), loadShelves()]);
+
+      // 5. If Edit Mode, Fetch Book Data
+      if (isEditMode) {
+        await loadBookForEditing(bookId);
+      }
+
+      // Load Categories
+      async function loadCategories() {
+        try {
+          const res = await window.api.get('/categories');
+          const categories = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+          categories.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.category_id || cat.id || cat._id;
+            opt.textContent = cat.name || cat.category_name;
+            categorySelect.appendChild(opt);
+          });
+        } catch (err) {
+          console.error('Failed to load categories:', err);
+          if (window.toast) window.toast.error('Failed to load categories list');
+        }
+      }
+
+      // Load Shelves grouped by Floor
+      async function loadShelves() {
+        try {
+          const res = await window.api.get('/shelves');
+          const shelves = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+          loadedShelves = shelves;
+
+          // Group shelves by floor
+          const floors = {};
+          shelves.forEach(sh => {
+            const f = sh.floor ?? 1;
+            if (!floors[f]) floors[f] = [];
+            floors[f].push(sh);
+          });
+
+          Object.keys(floors).sort((a,b) => a - b).forEach(floorNum => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = `Floor ${floorNum}`;
+
+            floors[floorNum].forEach(sh => {
+              const opt = document.createElement('option');
+              opt.value = sh.shelf_id || sh.id || sh._id;
+              const section = sh.section_name || `Section ${sh.section || ''}`;
+              opt.textContent = `${section} — Rack ${sh.rack_number || sh.rack || '?'}, Shelf ${sh.shelf_number || sh.shelf || '?'}`;
+              optgroup.appendChild(opt);
+            });
+
+            shelfSelect.appendChild(optgroup);
+          });
+        } catch (err) {
+          console.error('Failed to load shelves:', err);
+          if (window.toast) window.toast.error('Failed to load shelves list');
+        }
+      }
+
+      // Show shelf preview on change
+      shelfSelect.addEventListener('change', () => {
+        const val = shelfSelect.value;
+        const found = loadedShelves.find(s => String(s.shelf_id || s.id || s._id) === String(val));
+        if (found) {
+          shelfPreviewBox.style.display = 'block';
+          shelfPreviewText.textContent = `Assigned Location: Floor ${found.floor} > ${found.section_name || found.section} > Rack ${found.rack_number} > Shelf ${found.shelf_number}`;
+        } else {
+          shelfPreviewBox.style.display = 'none';
+        }
+      });
+
+      // 6. Pre-fill Book Data for Editing
+      async function loadBookForEditing(id) {
+        try {
+          saveBtn.disabled = true;
+          const res = await window.api.get(`/books/${id}`);
+          const book = (res && res.data) ? res.data : (res || {});
+
+          document.getElementById('book-title').value = book.title || '';
+          document.getElementById('book-author').value = book.author || '';
+          document.getElementById('book-isbn').value = book.isbn || '';
+          document.getElementById('book-publisher').value = book.publisher || '';
+          document.getElementById('book-year').value = book.publication_year || '';
+          document.getElementById('book-language').value = book.language || 'English';
+          document.getElementById('book-pages').value = book.pages || '';
+          document.getElementById('book-description').value = book.description || '';
+          totalCopiesInput.value = book.total_copies ?? 1;
+          availableCopiesInput.value = book.available_copies ?? 1;
+
+          if (book.category_id) {
+            categorySelect.value = book.category_id;
+          }
+          if (book.shelf_id) {
+            shelfSelect.value = book.shelf_id;
+            shelfSelect.dispatchEvent(new Event('change'));
+          }
+
+          if (book.cover_image) {
+            coverUrlInput.value = book.cover_image;
+            showCoverPreview(book.cover_image);
+          }
+        } catch (err) {
+          console.error('Failed to load book for editing:', err);
+          if (window.toast) window.toast.error(err.message || 'Book record not found');
+          setTimeout(() => { window.location.href = '/pages/admin-books.html'; }, 1500);
+        } finally {
+          saveBtn.disabled = false;
+        }
+      }
+
+      // 7. Cover Image Handling (File Upload or URL)
+      selectCoverBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        coverFileInput.click();
+      });
+
+      coverDropzone.addEventListener('click', () => {
+        coverFileInput.click();
+      });
+
+      coverDropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        coverDropzone.classList.add('dragover');
+      });
+
+      coverDropzone.addEventListener('dragleave', () => {
+        coverDropzone.classList.remove('dragover');
+      });
+
+      coverDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        coverDropzone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          uploadCoverFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      coverFileInput.addEventListener('change', () => {
+        if (coverFileInput.files && coverFileInput.files[0]) {
+          uploadCoverFile(coverFileInput.files[0]);
+        }
+      });
+
+      coverUrlInput.addEventListener('input', () => {
+        const url = coverUrlInput.value.trim();
+        if (url) {
+          showCoverPreview(url);
+        } else {
+          hideCoverPreview();
+        }
+      });
+
+      function showCoverPreview(src) {
+        coverPreview.src = src;
+        coverPreview.style.display = 'block';
+        coverPlaceholderContent.style.display = 'none';
+      }
+
+      function hideCoverPreview() {
+        coverPreview.src = '';
+        coverPreview.style.display = 'none';
+        coverPlaceholderContent.style.display = 'block';
+      }
+
+      async function uploadCoverFile(file) {
+        if (!file.type.startsWith('image/')) {
+          if (window.toast) window.toast.error('Please select a valid image file (PNG, JPG, WEBP)');
+          return;
+        }
+
+        try {
+          const formData = new FormData();
+          formData.append('image', file);
+
+          if (window.toast) window.toast.info('Uploading book cover art...');
+          const res = await window.api.upload('/upload', formData);
+          const url = (res && res.data && res.data.url) ? res.data.url : (res.url || '');
+
+          if (url) {
+            coverUrlInput.value = url;
+            showCoverPreview(url);
+            if (window.toast) window.toast.success('Cover image uploaded successfully');
+          } else {
+            throw new Error('Image URL was not returned by server');
+          }
+        } catch (err) {
+          console.error('File upload failed:', err);
+          if (window.toast) window.toast.error(err.message || 'Failed to upload cover image');
+        }
+      }
+
+      // 8. Form Validation & Submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (window.validate) {
+          const rules = {
+            title: { required: true, requiredMessage: 'Book title is mandatory' },
+            author: { required: true, requiredMessage: 'Author name is mandatory' },
+            category_id: { required: true, requiredMessage: 'Please select a book category' },
+            shelf_id: { required: true, requiredMessage: 'Please allocate a shelf location' },
+            total_copies: { required: true, number: true, min: 1, requiredMessage: 'Minimum 1 total copy required' }
+          };
+
+          const isbnVal = document.getElementById('book-isbn').value.trim();
+          if (isbnVal) {
+            rules.isbn = { isbn: true, isbnMessage: 'Please enter a valid ISBN-10 or ISBN-13 format' };
+          }
+
+          const isValid = window.validate.validateForm(form, rules);
+          if (!isValid) return;
+        }
+
+        // Prepare Payload
+        const payload = {
+          title: document.getElementById('book-title').value.trim(),
+          author: document.getElementById('book-author').value.trim(),
+          isbn: document.getElementById('book-isbn').value.trim() || null,
+          category_id: categorySelect.value,
+          publisher: document.getElementById('book-publisher').value.trim() || null,
+          publication_year: document.getElementById('book-year').value ? parseInt(document.getElementById('book-year').value, 10) : null,
+          language: document.getElementById('book-language').value || 'English',
+          pages: document.getElementById('book-pages').value ? parseInt(document.getElementById('book-pages').value, 10) : null,
+          description: document.getElementById('book-description').value.trim() || null,
+          total_copies: parseInt(totalCopiesInput.value, 10) || 1,
+          available_copies: parseInt(availableCopiesInput.value, 10) || parseInt(totalCopiesInput.value, 10),
+          shelf_id: shelfSelect.value,
+          cover_image: coverUrlInput.value.trim() || null
+        };
+
+        try {
+          saveBtn.disabled = true;
+          saveBtn.classList.add('loading');
+
+          if (isEditMode) {
+            await window.api.put(`/books/${bookId}`, payload);
+            if (window.toast) window.toast.success('Book updated successfully!');
+          } else {
+            await window.api.post('/books', payload);
+            if (window.toast) window.toast.success('New book created and cataloged!');
+          }
+
+          setTimeout(() => {
+            window.location.href = '/pages/admin-books.html';
+          }, 800);
+        } catch (err) {
+          console.error('Book submission error:', err);
+          saveBtn.disabled = false;
+          saveBtn.classList.remove('loading');
+
+          if (err.errors && Array.isArray(err.errors)) {
+            err.errors.forEach(e => {
+              if (window.validate) window.validate.showFieldError(`#book-${e.field || e.param}`, e.msg || e.message);
+            });
+          }
+
+          if (window.toast) {
+            window.toast.error(err.message || 'Failed to save book record');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

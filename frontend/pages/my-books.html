@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Borrowed Books · SMARTLIB</title>
+  <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .loan-card {
+      background-color: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      gap: var(--space-6);
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+    .loan-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .loan-card.overdue {
+      border-color: var(--danger-border);
+      background: linear-gradient(to right, rgba(220, 38, 38, 0.04) 0%, var(--surface) 20%);
+    }
+    .loan-card.overdue::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--danger);
+    }
+    .loan-card-cover {
+      width: 100px;
+      height: 145px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-md);
+    }
+    .loan-card-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .loan-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: var(--space-3);
+      padding: var(--space-3);
+      background-color: var(--bg);
+      border-radius: var(--radius-md);
+      margin-top: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+    .loan-meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .loan-meta-label {
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+    .loan-meta-value {
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      color: var(--text);
+    }
+    .table-book-cover {
+      width: 38px;
+      height: 52px;
+      border-radius: var(--radius-xs);
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-xs);
+    }
+    .table-book-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    @media (max-width: 640px) {
+      .loan-card {
+        flex-direction: column;
+      }
+      .loan-card-cover {
+        width: 80px;
+        height: 116px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header" id="top-header"></header>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <ul class="breadcrumb" aria-label="Breadcrumb">
+            <li class="breadcrumb-item"><a href="/pages/member-dashboard.html">Dashboard</a></li>
+            <li class="breadcrumb-separator">/</li>
+            <li class="breadcrumb-item active" aria-current="page">My Books</li>
+          </ul>
+          <h1 class="page-title">My Books</h1>
+          <p class="page-subtitle">Track your currently issued library books, due dates, shelf locations, and complete borrowing history.</p>
+        </div>
+        <div class="page-actions">
+          <a href="/pages/books.html" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Explore Catalog</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Segmented Tab Navigation -->
+      <div class="flex-between flex-wrap gap-4" style="margin-bottom: var(--space-6);">
+        <div class="tabs" role="tablist">
+          <button class="tab active" id="tab-btn-current" role="tab" aria-selected="true" aria-controls="panel-current">
+            <span>Current Loans</span>
+            <span class="count badge badge-primary" id="current-count-badge">0</span>
+          </button>
+          <button class="tab" id="tab-btn-history" role="tab" aria-selected="false" aria-controls="panel-history">
+            <span>Borrowing History</span>
+            <span class="count badge badge-secondary" id="history-count-badge">0</span>
+          </button>
+        </div>
+
+        <div id="history-search-wrap" style="display: none; width: 100%; max-width: 320px;">
+          <input type="text" class="form-control" id="history-search-input" placeholder="Search history by title, author..." />
+        </div>
+      </div>
+
+      <!-- Tab 1: Current Loans Tab Panel -->
+      <section id="panel-current" role="tabpanel" aria-labelledby="tab-btn-current">
+        <div id="current-loans-list" class="flex-col gap-5">
+          <!-- Loading skeleton -->
+          <div class="skeleton-card">
+            <div class="flex gap-4">
+              <div class="skeleton skeleton-image" style="width: 100px; height: 145px; border-radius: var(--radius-md);"></div>
+              <div class="flex-col flex-1">
+                <div class="skeleton skeleton-text title" style="width: 40%;"></div>
+                <div class="skeleton skeleton-text short" style="width: 25%;"></div>
+                <div class="skeleton skeleton-text" style="height: 50px; margin-top: 16px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Borrowing History Tab Panel -->
+      <section id="panel-history" role="tabpanel" aria-labelledby="tab-btn-history" style="display: none;">
+        <div class="table-container">
+          <table class="table table-hover" id="history-table">
+            <thead>
+              <tr>
+                <th>Book Title</th>
+                <th>Author</th>
+                <th>ISBN</th>
+                <th>Issued Date</th>
+                <th>Returned Date</th>
+                <th>Status</th>
+                <th>Fine Paid</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: var(--space-8);">
+                  <div class="spinner spinner-md"></div>
+                  <p class="text-xs text-muted" style="margin-top: 8px;">Loading borrowing history...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div id="history-pagination-container"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Specific Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Guard route
+      if (!window.auth || !window.auth.requireAuth(['member'])) {
+        return;
+      }
+
+      // 2. Init navigation
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      // 3. Tab management
+      const tabCurrent = document.getElementById('tab-btn-current');
+      const tabHistory = document.getElementById('tab-btn-history');
+      const panelCurrent = document.getElementById('panel-current');
+      const panelHistory = document.getElementById('panel-history');
+      const historySearchWrap = document.getElementById('history-search-wrap');
+
+      let activeTab = 'current';
+
+      function switchTab(target) {
+        activeTab = target;
+        if (target === 'current') {
+          tabCurrent.classList.add('active');
+          tabCurrent.setAttribute('aria-selected', 'true');
+          tabHistory.classList.remove('active');
+          tabHistory.setAttribute('aria-selected', 'false');
+          panelCurrent.style.display = 'block';
+          panelHistory.style.display = 'none';
+          historySearchWrap.style.display = 'none';
+        } else {
+          tabHistory.classList.add('active');
+          tabHistory.setAttribute('aria-selected', 'true');
+          tabCurrent.classList.remove('active');
+          tabCurrent.setAttribute('aria-selected', 'false');
+          panelHistory.style.display = 'block';
+          panelCurrent.style.display = 'none';
+          historySearchWrap.style.display = 'block';
+          if (!historyLoaded) {
+            loadHistory();
+          }
+        }
+      }
+
+      tabCurrent.addEventListener('click', () => switchTab('current'));
+      tabHistory.addEventListener('click', () => switchTab('history'));
+
+      // 4. Helper for days remaining
+      function getDaysRemaining(dueDateStr) {
+        if (!dueDateStr) return { days: 0, status: 'unknown', label: '—' };
+        const due = new Date(dueDateStr);
+        due.setHours(23, 59, 59, 999);
+        const now = new Date();
+        const diffMs = due.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+          return { days: Math.abs(diffDays), status: 'overdue', label: `${Math.abs(diffDays)} days overdue` };
+        } else if (diffDays === 0) {
+          return { days: 0, status: 'due-today', label: 'Due today' };
+        } else if (diffDays <= 3) {
+          return { days: diffDays, status: 'warning', label: `${diffDays} days remaining` };
+        } else {
+          return { days: diffDays, status: 'good', label: `${diffDays} days remaining` };
+        }
+      }
+
+      // 5. Load Current Loans
+      async function loadCurrentLoans() {
+        const container = document.getElementById('current-loans-list');
+        try {
+          const res = await window.api.get('/loans/my', { status: 'active' });
+          const loans = res.data || res || [];
+
+          document.getElementById('current-count-badge').textContent = String(loans.length);
+
+          if (!loans || loans.length === 0) {
+            container.innerHTML = window.components.emptyState(
+              'book',
+              'No Books Currently Issued',
+              'You do not have any active book loans right now. Search the catalog to borrow or reserve books.',
+              'Browse Book Catalog',
+              '/pages/books.html'
+            );
+            return;
+          }
+
+          let html = '';
+          loans.forEach(loan => {
+            const id = loan.id || loan.loan_id;
+            const bookId = loan.book_id || loan.bookId || '';
+            const title = loan.title || loan.book_title || 'Untitled Book';
+            const author = loan.author || loan.book_author || 'Unknown Author';
+            const cover = loan.cover_image || loan.book_cover || null;
+            const isbn = loan.isbn || loan.book_isbn || '—';
+            const issueDate = window.format ? window.format.date(loan.issue_date || loan.issued_at) : '—';
+            const dueDate = window.format ? window.format.date(loan.due_date) : '—';
+            const timing = getDaysRemaining(loan.due_date);
+            const isOverdue = timing.status === 'overdue';
+
+            const fineAmount = Number(loan.fine_amount || loan.estimated_fine || loan.accrued_fine || 0);
+
+            // Shelf hierarchy
+            let shelfStr = 'Floor 1';
+            if (loan.floor || loan.floor_number) {
+              const floor = loan.floor || loan.floor_number;
+              const section = loan.section_name || loan.section || 'General';
+              const rack = loan.rack_number || loan.rack || '1';
+              const shelf = loan.shelf_number || loan.shelf || '1';
+              shelfStr = `Floor ${floor} > Section ${section} > Rack ${rack} > Shelf ${shelf}`;
+            } else if (loan.shelf_location) {
+              shelfStr = window.format.shelfLocation(loan.shelf_location);
+            }
+
+            const coverEl = window.format ? window.format.bookCover(cover, title) : `<img src="${cover || ''}" alt="${title}" />`;
+
+            let badgeHtml = '';
+            if (isOverdue) {
+              badgeHtml = `<span class="badge badge-danger"><span class="badge-dot"></span>${timing.label.toUpperCase()}</span>`;
+            } else if (timing.status === 'warning' || timing.status === 'due-today') {
+              badgeHtml = `<span class="badge badge-warning"><span class="badge-dot"></span>${timing.label.toUpperCase()}</span>`;
+            } else {
+              badgeHtml = `<span class="badge badge-available"><span class="badge-dot"></span>${timing.label}</span>`;
+            }
+
+            html += `
+              <div class="loan-card ${isOverdue ? 'overdue' : ''}">
+                <div class="loan-card-cover">${coverEl}</div>
+                <div class="flex-col flex-1" style="min-width: 0;">
+                  <div class="flex-between flex-wrap gap-2">
+                    <div>
+                      <h3 class="text-lg font-bold" style="color: var(--text); margin-bottom: 2px;">
+                        <a href="/pages/book-details.html?id=${bookId}" style="color: inherit; text-decoration: none;">${title}</a>
+                      </h3>
+                      <p class="text-sm text-secondary" style="margin-bottom: 0;">by ${author}</p>
+                    </div>
+                    <div>${badgeHtml}</div>
+                  </div>
+
+                  <div class="loan-meta-grid">
+                    <div class="loan-meta-item">
+                      <span class="loan-meta-label">ISBN:</span>
+                      <span class="loan-meta-value font-mono">${isbn}</span>
+                    </div>
+                    <div class="loan-meta-item">
+                      <span class="loan-meta-label">Issued Date:</span>
+                      <span class="loan-meta-value">${issueDate}</span>
+                    </div>
+                    <div class="loan-meta-item">
+                      <span class="loan-meta-label">Due Date:</span>
+                      <span class="loan-meta-value ${isOverdue ? 'text-danger font-bold' : ''}">${dueDate}</span>
+                    </div>
+                    <div class="loan-meta-item">
+                      <span class="loan-meta-label">Fine Accrued:</span>
+                      <span class="loan-meta-value ${fineAmount > 0 ? 'text-danger font-bold' : 'text-success'}">
+                        ${fineAmount > 0 ? (window.format ? window.format.currency(fineAmount) : 'Rs. ' + fineAmount) : 'None'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="flex-between flex-wrap gap-3" style="margin-top: auto; padding-top: var(--space-2);">
+                    <div class="flex-align-center gap-2 text-xs text-muted">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16M6 4v16M18 4v16"/></svg>
+                      <span>Location: <strong>${shelfStr}</strong></span>
+                    </div>
+                    <div class="flex-align-center gap-2">
+                      <a href="/pages/book-details.html?id=${bookId}" class="btn btn-secondary btn-sm">Book Details</a>
+                      <a href="/pages/library-map.html" class="btn btn-ghost btn-sm" title="View location on floor plan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
+                        <span>Locate</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+
+          container.innerHTML = html;
+        } catch (err) {
+          console.error('Error loading current loans:', err);
+          container.innerHTML = `
+            <div class="card p-6 text-center">
+              <p class="text-danger font-semibold">Unable to load current borrowed books: ${err.message || 'Server error'}</p>
+              <button class="btn btn-secondary btn-sm" onclick="location.reload()">Retry</button>
+            </div>
+          `;
+        }
+      }
+
+      // 6. Load History
+      let historyLoaded = false;
+      let historyData = [];
+      let currentHistoryPage = 1;
+      const historyPageSize = 8;
+
+      async function loadHistory(page = 1) {
+        currentHistoryPage = page;
+        const tbody = document.getElementById('history-table-body');
+        const paginationContainer = document.getElementById('history-pagination-container');
+
+        try {
+          const res = await window.api.get('/loans/my', { status: 'returned', page, limit: historyPageSize });
+          historyData = res.data || res || [];
+          const total = (res.pagination && res.pagination.total) ? res.pagination.total : historyData.length;
+          const totalPages = Math.ceil(total / historyPageSize) || 1;
+
+          document.getElementById('history-count-badge').textContent = String(total);
+          historyLoaded = true;
+
+          if (historyData.length === 0) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="8" style="padding: 0; border: none;">
+                  ${window.components.emptyState('book', 'No Borrowing History Found', 'You have not returned any books yet.')}
+                </td>
+              </tr>
+            `;
+            paginationContainer.innerHTML = '';
+            return;
+          }
+
+          // Sort descending by return date
+          historyData.sort((a, b) => new Date(b.return_date || b.returned_at || 0) - new Date(a.return_date || a.returned_at || 0));
+
+          let rowsHtml = '';
+          historyData.forEach(item => {
+            const bookId = item.book_id || item.bookId || '';
+            const title = item.title || item.book_title || 'Untitled Book';
+            const author = item.author || item.book_author || 'Unknown Author';
+            const cover = item.cover_image || item.book_cover || null;
+            const isbn = item.isbn || item.book_isbn || '—';
+            const issueDate = window.format ? window.format.date(item.issue_date || item.issued_at) : '—';
+            const returnDate = window.format ? window.format.date(item.return_date || item.returned_at) : '—';
+            const fine = Number(item.fine_amount || item.paid_amount || 0);
+
+            const coverEl = window.format ? window.format.bookCover(cover, title) : `<img src="${cover || ''}" alt="${title}" />`;
+
+            rowsHtml += `
+              <tr>
+                <td>
+                  <div class="flex-align-center gap-3">
+                    <div class="table-book-cover">${coverEl}</div>
+                    <span class="font-bold text-sm" style="color: var(--text);">${title}</span>
+                  </div>
+                </td>
+                <td class="text-sm text-secondary">${author}</td>
+                <td class="font-mono text-xs">${isbn}</td>
+                <td class="text-xs text-muted">${issueDate}</td>
+                <td class="text-xs font-semibold text-success">${returnDate}</td>
+                <td><span class="badge badge-success"><span class="badge-dot"></span>Returned</span></td>
+                <td class="text-xs ${fine > 0 ? 'text-danger font-bold' : 'text-muted'}">
+                  ${fine > 0 ? (window.format ? window.format.currency(fine) : 'Rs. ' + fine) : '₹0.00'}
+                </td>
+                <td>
+                  <a href="/pages/book-details.html?id=${bookId}" class="btn btn-ghost btn-sm" title="View Book">Details</a>
+                </td>
+              </tr>
+            `;
+          });
+
+          tbody.innerHTML = rowsHtml;
+
+          // Render pagination
+          if (window.pagination) {
+            window.pagination.render(paginationContainer, {
+              currentPage: page,
+              totalPages: totalPages,
+              onPageChange: (newPage) => loadHistory(newPage)
+            });
+          }
+        } catch (err) {
+          console.error('Error loading history:', err);
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--danger); padding: var(--space-6);">
+                Failed to load borrowing history: ${err.message || 'Network error'}
+              </td>
+            </tr>
+          `;
+        }
+      }
+
+      // History Search filter
+      const historySearchInput = document.getElementById('history-search-input');
+      if (historySearchInput) {
+        historySearchInput.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          const rows = document.querySelectorAll('#history-table-body tr');
+          rows.forEach(r => {
+            const text = r.textContent.toLowerCase();
+            r.style.display = text.includes(query) ? '' : 'none';
+          });
+        });
+      }
+
+      // Initial call
+      loadCurrentLoans();
+    });
+  </script>
+</body>
+</html>
+

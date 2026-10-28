@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Dashboard · SMARTLIB</title>
+  <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    /* Dashboard-specific enhancements */
+    .due-timeline {
+      position: relative;
+      padding-left: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .due-timeline::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      left: 7px;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-item {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: -24px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 3px solid var(--primary);
+      box-shadow: 0 0 0 2px var(--surface);
+      z-index: 2;
+    }
+    .timeline-dot.danger {
+      border-color: var(--danger);
+      background: var(--danger-bg);
+    }
+    .timeline-dot.warning {
+      border-color: var(--warning);
+      background: var(--warning-bg);
+    }
+    .timeline-dot.success {
+      border-color: var(--success);
+      background: var(--success-bg);
+    }
+    .loan-row-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .loan-row-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .loan-thumb {
+      width: 48px;
+      height: 68px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .loan-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .reservation-card-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .reservation-card-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .fine-alert-box {
+      border-left: 4px solid var(--danger);
+      background: var(--danger-bg);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header" id="top-header"></header>
+
+      <!-- Welcome Hero Banner -->
+      <section class="dashboard-welcome-banner card-3d">
+        <div style="position: relative; z-index: 2;">
+          <div class="flex-align-center gap-2" style="margin-bottom: var(--space-2);">
+            <span class="badge badge-secondary" id="member-number-badge">MEM-LOADING</span>
+            <span class="badge badge-available"><span class="badge-dot"></span>Active Member</span>
+          </div>
+          <h1 class="dashboard-welcome-title" id="welcome-heading">Welcome back</h1>
+          <p style="color: rgba(255, 255, 255, 0.85); margin-bottom: 0; max-width: 620px;">
+            Here is your personal library summary. Keep track of current book loans, upcoming due dates, holds, and library notifications.
+          </p>
+          <div class="dashboard-quick-actions">
+            <a href="/pages/books.html" class="btn btn-primary" style="background: rgba(255, 255, 255, 0.95); color: var(--primary-800);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <span>Browse Books</span>
+            </a>
+            <a href="/pages/my-books.html" class="btn btn-secondary" style="background: rgba(255, 255, 255, 0.15); color: #fff; border-color: rgba(255, 255, 255, 0.3);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+              <span>My Borrowed Books</span>
+            </a>
+            <a href="/pages/library-map.html" class="btn btn-ghost" style="color: rgba(255, 255, 255, 0.9);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
+              <span>Floor Map</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 Stat Cards Row -->
+      <section class="stats-grid" id="stats-row" aria-label="Summary Statistics">
+        <div class="stat-card tilt-card" id="stat-active-loans">
+          <div class="stat-icon primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="val-active-loans">—</span>
+            <span class="stat-label">Active Loans (Max 3)</span>
+          </div>
+        </div>
+
+        <div class="stat-card tilt-card" id="stat-reservations">
+          <div class="stat-icon warning">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="val-reservations">—</span>
+            <span class="stat-label">Pending Holds</span>
+          </div>
+        </div>
+
+        <div class="stat-card tilt-card" id="stat-fines">
+          <div class="stat-icon danger">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="val-fines">—</span>
+            <span class="stat-label">Unpaid Fines</span>
+          </div>
+        </div>
+
+        <div class="stat-card tilt-card" id="stat-notifications">
+          <div class="stat-icon info">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="val-notifications">—</span>
+            <span class="stat-label">Unread Alerts</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Dashboard Grid -->
+      <div class="grid-2">
+        <!-- Left Column: Current Loans & Pending Reservations -->
+        <div class="flex-col gap-6">
+          <!-- Current Loans Card -->
+          <div class="card card-3d">
+            <div class="card-header">
+              <div class="flex-align-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+                <h2 class="card-header-title">Current Loans</h2>
+              </div>
+              <a href="/pages/my-books.html" class="btn btn-ghost btn-sm">View All &rarr;</a>
+            </div>
+            <div class="card-body" id="current-loans-container">
+              <!-- Skeletons while loading -->
+              <div class="skeleton-card" style="border:none; padding: 0;">
+                <div class="skeleton skeleton-text" style="height: 60px; margin-bottom: 12px;"></div>
+                <div class="skeleton skeleton-text" style="height: 60px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Reservations Card -->
+          <div class="card card-3d">
+            <div class="card-header">
+              <div class="flex-align-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--warning);"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                <h2 class="card-header-title">Pending Reservations</h2>
+              </div>
+              <a href="/pages/reservations.html" class="btn btn-ghost btn-sm">View All &rarr;</a>
+            </div>
+            <div class="card-body" id="reservations-container">
+              <div class="skeleton-card" style="border:none; padding: 0;">
+                <div class="skeleton skeleton-text" style="height: 60px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Due Dates, Fines & Notifications -->
+        <div class="flex-col gap-6">
+          <!-- Upcoming Due Dates Timeline Card -->
+          <div class="card card-3d">
+            <div class="card-header">
+              <div class="flex-align-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--info);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <h2 class="card-header-title">Upcoming Due Dates</h2>
+              </div>
+              <span class="text-xs text-muted" id="timeline-count-badge">Sorted by due date</span>
+            </div>
+            <div class="card-body" id="due-timeline-container">
+              <div class="skeleton skeleton-text" style="height: 80px;"></div>
+            </div>
+          </div>
+
+          <!-- Outstanding Fines Card -->
+          <div class="card card-3d">
+            <div class="card-header">
+              <div class="flex-align-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--danger);"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"/><path d="M16 8h-8"/><path d="M16 12h-8"/><path d="M12 16H8"/></svg>
+                <h2 class="card-header-title">Outstanding Fines</h2>
+              </div>
+            </div>
+            <div class="card-body" id="fines-container">
+              <div class="skeleton skeleton-text" style="height: 60px;"></div>
+            </div>
+          </div>
+
+          <!-- Recent Notifications Card -->
+          <div class="card card-3d">
+            <div class="card-header">
+              <div class="flex-align-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                <h2 class="card-header-title">Recent Notifications</h2>
+              </div>
+              <a href="/pages/notifications.html" class="btn btn-ghost btn-sm">View All &rarr;</a>
+            </div>
+            <div class="card-body" id="notifications-container">
+              <div class="skeleton skeleton-text" style="height: 80px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Specific Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Route guard
+      if (!window.auth || !window.auth.requireAuth(['member'])) {
+        return;
+      }
+
+      // 2. Navigation init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      const currentUser = window.auth.getUser() || {};
+      const memberName = currentUser.name || 'Member';
+      const welcomeEl = document.getElementById('welcome-heading');
+      if (welcomeEl) {
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? 'Good morning' : (hour < 17 ? 'Good afternoon' : 'Good evening');
+        welcomeEl.textContent = `${greeting}, ${memberName.split(' ')[0]}!`;
+      }
+
+      const memNumEl = document.getElementById('member-number-badge');
+      if (memNumEl) {
+        memNumEl.textContent = currentUser.membership_number || currentUser.member_id || 'ID: #' + (currentUser.id || '—');
+      }
+
+      // 3. Helper for calculating days remaining
+      function getDaysRemaining(dueDateStr) {
+        if (!dueDateStr) return { days: 0, status: 'unknown' };
+        const due = new Date(dueDateStr);
+        due.setHours(23, 59, 59, 999);
+        const now = new Date();
+        const diffMs = due.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+          return { days: Math.abs(diffDays), status: 'overdue', label: `${Math.abs(diffDays)}d overdue` };
+        } else if (diffDays === 0) {
+          return { days: 0, status: 'due-today', label: 'Due today' };
+        } else if (diffDays <= 3) {
+          return { days: diffDays, status: 'warning', label: `${diffDays}d left` };
+        } else {
+          return { days: diffDays, status: 'good', label: `${diffDays}d left` };
+        }
+      }
+
+      // 4. Fetch all dashboard data
+      let loans = [];
+      let reservations = [];
+      let fines = [];
+      let notifications = [];
+
+      try {
+        const [loansRes, resRes, finesRes, notifsRes] = await Promise.allSettled([
+          window.api.get('/loans/my', { status: 'active' }),
+          window.api.get('/reservations/my', { status: 'pending' }),
+          window.api.get('/fines/my', { status: 'unpaid' }),
+          window.api.get('/notifications', { limit: 5 })
+        ]);
+
+        if (loansRes.status === 'fulfilled' && loansRes.value) {
+          loans = loansRes.value.data || loansRes.value || [];
+        }
+        if (resRes.status === 'fulfilled' && resRes.value) {
+          reservations = resRes.value.data || resRes.value || [];
+        }
+        if (finesRes.status === 'fulfilled' && finesRes.value) {
+          fines = finesRes.value.data || finesRes.value || [];
+        }
+        if (notifsRes.status === 'fulfilled' && notifsRes.value) {
+          notifications = notifsRes.value.data || notifsRes.value || [];
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+      }
+
+      // 5. Update Stat Cards
+      const activeLoansCount = loans.length;
+      document.getElementById('val-active-loans').textContent = `${activeLoansCount} / 3`;
+
+      const pendingResCount = reservations.filter(r => (r.status || 'pending').toLowerCase() === 'pending').length;
+      document.getElementById('val-reservations').textContent = String(pendingResCount);
+
+      const unpaidFinesTotal = fines.reduce((acc, f) => acc + (Number(f.amount) || 0) - (Number(f.paid_amount) || 0), 0);
+      document.getElementById('val-fines').textContent = window.format ? window.format.currency(unpaidFinesTotal) : `Rs. ${unpaidFinesTotal}`;
+
+      const unreadNotifsCount = notifications.filter(n => !n.isRead && !n.read).length;
+      document.getElementById('val-notifications').textContent = String(unreadNotifsCount);
+
+      // 6. Render Current Loans
+      const loansContainer = document.getElementById('current-loans-container');
+      if (loans.length === 0) {
+        loansContainer.innerHTML = window.components.emptyState(
+          'book',
+          'No Active Borrowed Books',
+          'You currently have no checked-out books. Explore the library catalog to find your next great read!',
+          'Browse Catalog',
+          '/pages/books.html'
+        );
+      } else {
+        let loansHtml = '';
+        loans.slice(0, 4).forEach(l => {
+          const title = l.title || l.book_title || 'Untitled Book';
+          const author = l.author || l.book_author || 'Unknown Author';
+          const cover = l.cover_image || l.book_cover || null;
+          const issueDate = window.format ? window.format.date(l.issue_date || l.issued_at) : '—';
+          const dueDate = window.format ? window.format.date(l.due_date) : '—';
+          const timing = getDaysRemaining(l.due_date);
+
+          let badgeClass = 'badge-success';
+          if (timing.status === 'overdue') badgeClass = 'badge-danger';
+          else if (timing.status === 'warning' || timing.status === 'due-today') badgeClass = 'badge-warning';
+
+          const coverEl = window.format ? window.format.bookCover(cover, title) : `<img src="${cover || ''}" alt="${title}" />`;
+
+          loansHtml += `
+            <div class="loan-row-item">
+              <div class="loan-thumb">${coverEl}</div>
+              <div class="flex-col flex-1" style="min-width: 0;">
+                <h4 class="text-sm font-bold text-truncate" title="${title}" style="margin-bottom: 2px;">${title}</h4>
+                <p class="text-xs text-secondary text-truncate" style="margin-bottom: 4px;">by ${author}</p>
+                <div class="flex-align-center gap-3 text-xs text-muted">
+                  <span>Issued: ${issueDate}</span>
+                  <span>Due: ${dueDate}</span>
+                </div>
+              </div>
+              <div class="flex-col flex-align-end gap-1">
+                <span class="badge ${badgeClass}">${timing.label}</span>
+                ${timing.status === 'overdue' && (l.fine_amount || l.estimated_fine) ? `
+                  <span class="text-xs font-bold text-danger">Fine: ${window.format ? window.format.currency(l.fine_amount || l.estimated_fine) : 'Rs. ' + (l.fine_amount || l.estimated_fine)}</span>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        });
+        loansContainer.innerHTML = loansHtml;
+      }
+
+      // 7. Render Due Dates Timeline
+      const timelineContainer = document.getElementById('due-timeline-container');
+      const sortedLoans = [...loans].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+
+      if (sortedLoans.length === 0) {
+        timelineContainer.innerHTML = window.components.emptyState(
+          'calendar',
+          'No Upcoming Deadlines',
+          'You have no books currently due.',
+          '',
+          ''
+        );
+      } else {
+        let timelineHtml = '<div class="due-timeline">';
+        sortedLoans.forEach(l => {
+          const title = l.title || l.book_title || 'Untitled Book';
+          const dueDate = window.format ? window.format.date(l.due_date) : '—';
+          const timing = getDaysRemaining(l.due_date);
+
+          let dotClass = 'success';
+          if (timing.status === 'overdue') dotClass = 'danger';
+          else if (timing.status === 'warning' || timing.status === 'due-today') dotClass = 'warning';
+
+          timelineHtml += `
+            <div class="timeline-item">
+              <div class="timeline-dot ${dotClass}"></div>
+              <div class="flex-between">
+                <span class="text-sm font-semibold text-truncate" style="max-width: 70%;" title="${title}">${title}</span>
+                <span class="text-xs font-bold ${dotClass === 'danger' ? 'text-danger' : (dotClass === 'warning' ? 'text-warning' : 'text-success')}">${timing.label}</span>
+              </div>
+              <span class="text-xs text-muted">Due on ${dueDate}</span>
+            </div>
+          `;
+        });
+        timelineHtml += '</div>';
+        timelineContainer.innerHTML = timelineHtml;
+      }
+
+      // 8. Render Pending Reservations
+      const resContainer = document.getElementById('reservations-container');
+      const pendingReservations = reservations.filter(r => (r.status || 'pending').toLowerCase() === 'pending');
+
+      if (pendingReservations.length === 0) {
+        resContainer.innerHTML = window.components.emptyState(
+          'calendar',
+          'No Holds in Queue',
+          'You have no books waiting on hold.',
+          'Reserve a Book',
+          '/pages/books.html'
+        );
+      } else {
+        let resHtml = '';
+        pendingReservations.forEach(r => {
+          const resId = r.id || r.reservation_id || '';
+          const title = r.title || r.book_title || 'Untitled Book';
+          const author = r.author || r.book_author || 'Unknown Author';
+          const position = r.queue_position || 1;
+          const date = window.format ? window.format.date(r.reservation_date || r.created_at) : '—';
+
+          resHtml += `
+            <div class="reservation-card-item" data-reservation-id="${resId}">
+              <div class="flex-col flex-1" style="min-width: 0;">
+                <h4 class="text-sm font-bold text-truncate" style="margin-bottom: 2px;">${title}</h4>
+                <p class="text-xs text-secondary text-truncate" style="margin-bottom: 4px;">by ${author}</p>
+                <div class="flex-align-center gap-2">
+                  <span class="badge badge-primary font-mono text-xs">Position #${position} in queue</span>
+                  <span class="text-xs text-muted">Reserved: ${date}</span>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm cancel-res-btn" data-id="${resId}" title="Cancel hold request">
+                Cancel
+              </button>
+            </div>
+          `;
+        });
+        resContainer.innerHTML = resHtml;
+
+        // Bind cancel buttons
+        resContainer.querySelectorAll('.cancel-res-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            const confirmed = await window.modal.confirm(
+              'Cancel Reservation?',
+              'Are you sure you want to release your place in line for this book?',
+              { confirmClass: 'btn-danger', confirmText: 'Yes, Cancel Hold' }
+            );
+            if (!confirmed) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner spinner-sm"></span>';
+
+            try {
+              await window.api.put(`/reservations/${id}/cancel`, {});
+              window.toast.success('Your reservation was cancelled successfully.', 'Hold Cancelled');
+              // Remove row from DOM
+              const row = resContainer.querySelector(`[data-reservation-id="${id}"]`);
+              if (row) row.remove();
+              // Update count badge
+              const remaining = resContainer.querySelectorAll('.reservation-card-item').length;
+              document.getElementById('val-reservations').textContent = String(remaining);
+              if (remaining === 0) {
+                resContainer.innerHTML = window.components.emptyState('calendar', 'No Holds in Queue', 'You have no books waiting on hold.');
+              }
+            } catch (err) {
+              window.toast.error(err.message || 'Failed to cancel reservation.', 'Error');
+              btn.disabled = false;
+              btn.textContent = 'Cancel';
+            }
+          });
+        });
+      }
+
+      // 9. Render Fines
+      const finesContainer = document.getElementById('fines-container');
+      const unpaidFines = fines.filter(f => (f.status || 'unpaid').toLowerCase() === 'unpaid');
+
+      if (unpaidFines.length === 0) {
+        finesContainer.innerHTML = `
+          <div class="flex-col flex-center text-center" style="padding: var(--space-4) 0;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--success-bg); color: var(--success); display:flex; align-items:center; justify-content:center; margin-bottom: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h4 class="text-sm font-bold" style="color: var(--success);">No Outstanding Fines</h4>
+            <p class="text-xs text-muted" style="margin-bottom: 0;">Your library account is in great standing with zero balance due.</p>
+          </div>
+        `;
+      } else {
+        let fineItemsHtml = '';
+        unpaidFines.forEach(f => {
+          const title = f.title || f.book_title || 'Overdue Book Fine';
+          const amount = window.format ? window.format.currency(f.amount) : `Rs. ${f.amount}`;
+          fineItemsHtml += `
+            <div class="flex-between" style="padding: 6px 0; border-bottom: 1px dashed var(--danger-border);">
+              <span class="text-xs text-secondary text-truncate" style="max-width: 65%;">${title}</span>
+              <span class="text-xs font-bold text-danger">${amount}</span>
+            </div>
+          `;
+        });
+
+        finesContainer.innerHTML = `
+          <div class="fine-alert-box">
+            <div class="flex-between" style="margin-bottom: 6px;">
+              <span class="text-xs font-semibold text-danger">Total Outstanding Balance:</span>
+              <span class="text-base font-extrabold text-danger">${window.format ? window.format.currency(unpaidFinesTotal) : 'Rs. ' + unpaidFinesTotal}</span>
+            </div>
+            <div style="margin-bottom: 8px;">${fineItemsHtml}</div>
+            <p class="text-xs text-secondary" style="margin-bottom: 0; display: flex; align-items: center; gap: 4px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" x2="12" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+              Please visit the front circulation desk to settle outstanding fines via cash or UPI/card.
+            </p>
+          </div>
+        `;
+      }
+
+      // 10. Render Recent Notifications
+      const notifsContainer = document.getElementById('notifications-container');
+      if (notifications.length === 0) {
+        notifsContainer.innerHTML = window.components.emptyState(
+          'bell',
+          'No Notifications Yet',
+          'You are completely caught up with all library alerts.',
+          '',
+          ''
+        );
+      } else {
+        let notifsHtml = '<div class="activity-feed-list">';
+        notifications.slice(0, 5).forEach(n => {
+          const id = n._id || n.id;
+          const title = n.title || 'Library Alert';
+          const message = n.message || '';
+          const type = (n.type || 'info').toLowerCase();
+          const isRead = n.isRead || n.read;
+          const time = window.format ? window.format.relativeTime(n.createdAt || n.created_at) : 'recently';
+
+          // Choose icon based on type
+          let iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+          let iconColor = 'primary';
+          if (type.includes('due') || type.includes('loan')) {
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>';
+            iconColor = 'warning';
+          } else if (type.includes('fine')) {
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>';
+            iconColor = 'danger';
+          } else if (type.includes('reservation')) {
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>';
+            iconColor = 'info';
+          }
+
+          notifsHtml += `
+            <div class="activity-feed-item ${isRead ? 'read' : 'unread'}" style="cursor: pointer;" onclick="window.location.href='/pages/notifications.html'">
+              <div class="stat-icon ${iconColor}" style="width: 2rem; height: 2rem; border-radius: var(--radius-md); flex-shrink: 0;">
+                ${iconSvg}
+              </div>
+              <div class="flex-col flex-1" style="min-width: 0;">
+                <div class="flex-between">
+                  <span class="text-xs ${isRead ? 'text-secondary' : 'font-bold'}" style="color: var(--text);">${title}</span>
+                  <span class="text-xs text-muted">${time}</span>
+                </div>
+                <p class="text-xs text-secondary text-truncate" style="margin-top: 2px; margin-bottom: 0;">${message}</p>
+              </div>
+            </div>
+          `;
+        });
+        notifsHtml += '</div>';
+        notifsContainer.innerHTML = notifsHtml;
+      }
+
+      // 11. Initialize 3D effects
+      if (window.effects && window.effects.initTiltEffect) {
+        window.effects.initTiltEffect('.tilt-card, .card-3d');
+      }
+    });
+  </script>
+</body>
+</html>
+

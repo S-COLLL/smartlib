@@ -15,21 +15,31 @@ function createApp() {
   app.use(express.json({ limit: '2mb' }));
 
   app.get('/api/health', (_req, res) => res.json({ success: true, status: 'ok', time: new Date() }));
-  app.use('/api/auth', require('./routes/auth'));
-  app.use('/api/books', require('./routes/books'));
-  app.use('/api/authors', require('./routes/authors'));
-  app.use('/api/categories', require('./routes/categories'));
-  app.use('/api/shelves', require('./routes/shelves'));
-  app.use('/api/members', require('./routes/members'));
-  app.use('/api/issues', require('./routes/issues'));
-  app.use('/api/returns', require('./routes/returns'));
-  app.use('/api/reservations', require('./routes/reservations'));
-  app.use('/api/fines', require('./routes/fines'));
-  app.use('/api/payments', require('./routes/payments'));
-  app.use('/api/notifications', require('./routes/notifications'));
-  app.use('/api/reports', require('./routes/reports'));
-  app.use('/api/settings', require('./routes/settings'));
-  app.use('/api/ai', require('./routes/ai'));
+  app.get('/api/v1/health', (_req, res) => res.json({ success: true, status: 'ok', time: new Date() }));
+
+  const registerRoutes = (prefix) => {
+    app.use(`${prefix}/auth`, require('./routes/auth'));
+    app.use(`${prefix}/books`, require('./routes/books'));
+    app.use(`${prefix}/authors`, require('./routes/authors'));
+    app.use(`${prefix}/categories`, require('./routes/categories'));
+    app.use(`${prefix}/shelves`, require('./routes/shelves'));
+    app.use(`${prefix}/members`, require('./routes/members'));
+    app.use(`${prefix}/issues`, require('./routes/issues'));
+    app.use(`${prefix}/loans`, require('./routes/loans'));
+    app.use(`${prefix}/returns`, require('./routes/returns'));
+    app.use(`${prefix}/reservations`, require('./routes/reservations'));
+    app.use(`${prefix}/fines`, require('./routes/fines'));
+    app.use(`${prefix}/payments`, require('./routes/payments'));
+    app.use(`${prefix}/notifications`, require('./routes/notifications'));
+    app.use(`${prefix}/reviews`, require('./routes/reviews'));
+    app.use(`${prefix}/reports`, require('./routes/reports'));
+    app.use(`${prefix}/settings`, require('./routes/settings'));
+    app.use(`${prefix}/ai`, require('./routes/ai'));
+  };
+
+  registerRoutes('/api');
+  registerRoutes('/api/v1');
+
   app.use('/api', notFound);
 
   // Serve the frontend from the same origin

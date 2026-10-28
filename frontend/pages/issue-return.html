@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Issue &amp; Return Books · SMARTLIB</title>
+  <meta name="description" content="SMARTLIB Library Management System - Circulation Desk for Book Issue and Return Operations">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .circulation-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-8);
+      margin-bottom: var(--space-10);
+      align-items: start;
+    }
+    @media (max-width: 960px) {
+      .circulation-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    .lookup-results-list {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: var(--z-dropdown);
+      display: none;
+    }
+    .lookup-results-list.show {
+      display: block;
+    }
+    .lookup-item {
+      padding: var(--space-3) var(--space-4);
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      transition: background-color var(--transition-fast);
+    }
+    .lookup-item:hover {
+      background-color: var(--primary-50);
+    }
+    .lookup-item:last-child {
+      border-bottom: none;
+    }
+    .selection-card {
+      background: var(--bg-alt);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-top: var(--space-3);
+      display: none;
+    }
+    .selection-card.active {
+      display: block;
+      animation: slide-up 0.2s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Dynamic Sidebar -->
+    <aside id="sidebar"></aside>
+
+    <!-- Top Header -->
+    <header id="top-header"></header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Breadcrumb -->
+      <nav aria-label="Breadcrumb">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/pages/admin-dashboard.html">SMARTLIB</a></li>
+          <li class="breadcrumb-item">Circulation</li>
+          <li class="breadcrumb-item active" aria-current="page">Issue &amp; Return</li>
+        </ul>
+      </nav>
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="page-title-group">
+          <h1 class="page-title">Issue &amp; Return Books</h1>
+          <p class="page-subtitle">Circulation desk for issuing book loans, checking in returns, and calculating overdue fines.</p>
+        </div>
+      </header>
+
+      <!-- Dual Circulation Operations Grid -->
+      <div class="circulation-layout">
+        <!-- 1. ISSUE BOOK SECTION -->
+        <section class="card p-6" id="issue-card-section">
+          <div class="flex-align-center gap-3 mb-6 pb-4" style="border-bottom: 1px solid var(--border-light);">
+            <div class="stat-icon primary sm" style="width: 2.75rem; height: 2.75rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div>
+              <h3 class="card-header-title">Issue Book to Member</h3>
+              <p class="text-xs text-secondary mb-0">Check out an in-stock copy to a registered member</p>
+            </div>
+          </div>
+
+          <form id="issue-book-form" novalidate>
+            <!-- Member Lookup -->
+            <div class="form-group" style="position: relative;">
+              <label class="form-label" for="issue-member-search">
+                1. Member Lookup <span class="required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <span class="input-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                </span>
+                <input type="text" class="form-control" id="issue-member-search" autocomplete="off" placeholder="Type name, email, or membership #..." />
+              </div>
+              <div class="lookup-results-list" id="member-lookup-results"></div>
+
+              <!-- Selected Member Info Card -->
+              <div class="selection-card" id="selected-member-card">
+                <div class="flex-between">
+                  <div class="flex-align-center gap-3">
+                    <div class="avatar avatar-sm" id="selected-member-avatar">M</div>
+                    <div class="flex-col">
+                      <span class="font-bold text-sm" id="selected-member-name">Member Name</span>
+                      <span class="text-xs font-mono text-muted" id="selected-member-num">#MEM-0000</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-ghost btn-sm" id="clear-selected-member-btn" style="color: var(--danger);">&times; Clear</button>
+                </div>
+                <div class="mt-3 pt-2" style="border-top: 1px solid var(--border-light); display: flex; gap: var(--space-4); font-size: var(--text-xs);">
+                  <div>Active Loans: <strong id="selected-member-loans">0</strong></div>
+                  <div>Fines Balance: <strong id="selected-member-fines" class="text-success">Rs. 0.00</strong></div>
+                </div>
+                <!-- Warning Notice -->
+                <div class="mt-2 text-danger text-xs font-semibold" id="member-issue-warning" style="display: none;"></div>
+              </div>
+            </div>
+
+            <!-- Book Lookup -->
+            <div class="form-group" style="position: relative;">
+              <label class="form-label" for="issue-book-search">
+                2. Book Lookup <span class="required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <span class="input-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+                </span>
+                <input type="text" class="form-control" id="issue-book-search" autocomplete="off" placeholder="Scan ISBN or type book title..." />
+              </div>
+              <div class="lookup-results-list" id="book-lookup-results"></div>
+
+              <!-- Selected Book Info Card -->
+              <div class="selection-card" id="selected-book-card">
+                <div class="flex-between">
+                  <div class="flex-align-center gap-3">
+                    <div class="flex-col">
+                      <span class="font-bold text-sm" id="selected-book-title">Book Title</span>
+                      <span class="text-xs text-secondary" id="selected-book-author">by Author</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-ghost btn-sm" id="clear-selected-book-btn" style="color: var(--danger);">&times; Clear</button>
+                </div>
+                <div class="mt-3 pt-2" style="border-top: 1px solid var(--border-light); display: flex; gap: var(--space-4); font-size: var(--text-xs);">
+                  <div>Available: <strong id="selected-book-avail">0</strong></div>
+                  <div>Shelf: <strong id="selected-book-shelf" class="text-primary">Unassigned</strong></div>
+                </div>
+                <!-- Warning Notice -->
+                <div class="mt-2 text-danger text-xs font-semibold" id="book-issue-warning" style="display: none;"></div>
+              </div>
+            </div>
+
+            <!-- Dates -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+              <div class="form-group">
+                <label class="form-label" for="issue-date-input">Issue Date</label>
+                <input type="date" class="form-control font-mono" id="issue-date-input" readonly />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="due-date-input">Due Date (14 Days)</label>
+                <input type="date" class="form-control font-mono" id="due-date-input" />
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-lg btn-full mt-4" id="submit-issue-btn">
+              <span>Issue Book</span>
+            </button>
+          </form>
+        </section>
+
+        <!-- 2. RETURN BOOK SECTION -->
+        <section class="card p-6" id="return-card-section">
+          <div class="flex-align-center gap-3 mb-6 pb-4" style="border-bottom: 1px solid var(--border-light);">
+            <div class="stat-icon success sm" style="width: 2.75rem; height: 2.75rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div>
+              <h3 class="card-header-title">Process Book Return</h3>
+              <p class="text-xs text-secondary mb-0">Check in loan, verify return condition &amp; calculate overdue fines</p>
+            </div>
+          </div>
+
+          <form id="return-book-form" novalidate>
+            <!-- Search Loan -->
+            <div class="form-group" style="position: relative;">
+              <label class="form-label" for="return-loan-search">
+                Search Active Loan <span class="required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <span class="input-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </span>
+                <input type="text" class="form-control" id="return-loan-search" autocomplete="off" placeholder="Search by Member Name, Book Title, or Loan ID..." />
+              </div>
+              <div class="lookup-results-list" id="loan-lookup-results"></div>
+            </div>
+
+            <!-- Selected Active Loan Details Card -->
+            <div class="selection-card mb-4" id="selected-loan-card">
+              <div class="flex-between">
+                <div>
+                  <h4 class="font-bold text-base text-primary" id="return-book-title">Selected Book Title</h4>
+                  <p class="text-xs text-secondary mb-1">Borrower: <strong id="return-member-name">John Doe</strong> (<span id="return-member-num">#MEM-1234</span>)</p>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm" id="clear-selected-loan-btn" style="color: var(--danger);">&times; Clear</button>
+              </div>
+
+              <div class="mt-3 pt-3" style="border-top: 1px solid var(--border-light); display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); font-size: var(--text-xs);">
+                <div>Issue Date: <span class="font-mono" id="return-issue-date">—</span></div>
+                <div>Due Date: <span class="font-mono font-bold" id="return-due-date">—</span></div>
+                <div style="grid-column: span 2;" id="return-overdue-alert-box">
+                  <!-- Overdue status badge and calculated fine inserted here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Return Action Button -->
+            <button type="submit" class="btn btn-success btn-lg btn-full mt-4" id="submit-return-btn" disabled>
+              <span>Confirm &amp; Process Return</span>
+            </button>
+          </form>
+        </section>
+      </div>
+
+      <!-- 3. RECENT TRANSACTIONS TABLE -->
+      <section class="card">
+        <div class="card-header flex-between">
+          <div>
+            <h3 class="card-header-title">Recent Circulation Transactions</h3>
+            <span class="text-xs text-secondary">Real-time log of book loans and returns</span>
+          </div>
+          <a href="/pages/transactions.html" class="btn btn-ghost btn-sm">Full History &rarr;</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-container" style="border: none; margin-bottom: 0;">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Book</th>
+                  <th>Member</th>
+                  <th>Issued Date</th>
+                  <th>Due Date</th>
+                  <th>Return Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-transactions-tbody">
+                <tr><td colspan="6"><div class="skeleton skeleton-text py-2"></div></td></tr>
+                <tr><td colspan="6"><div class="skeleton skeleton-text py-2"></div></td></tr>
+                <tr><td colspan="6"><div class="skeleton skeleton-text py-2"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules in strict order -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Role Protection Guard
+      if (!window.auth || !window.auth.requireAuth(['admin', 'librarian'])) {
+        return;
+      }
+
+      // 2. Navigation Init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      // 3. Setup Dates
+      const today = new Date();
+      const issueDateStr = today.toISOString().split('T')[0];
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 14);
+      const dueDateStr = dueDate.toISOString().split('T')[0];
+
+      const issueDateInput = document.getElementById('issue-date-input');
+      const dueDateInput = document.getElementById('due-date-input');
+      issueDateInput.value = issueDateStr;
+      dueDateInput.value = dueDateStr;
+
+      // 4. State for Issue Section
+      let selectedMember = null;
+      let selectedBook = null;
+
+      const memberSearch = document.getElementById('issue-member-search');
+      const memberResults = document.getElementById('member-lookup-results');
+      const memberCard = document.getElementById('selected-member-card');
+      const clearMemberBtn = document.getElementById('clear-selected-member-btn');
+      const memberWarning = document.getElementById('member-issue-warning');
+
+      const bookSearch = document.getElementById('issue-book-search');
+      const bookResults = document.getElementById('book-lookup-results');
+      const bookCard = document.getElementById('selected-book-card');
+      const clearBookBtn = document.getElementById('clear-selected-book-btn');
+      const bookWarning = document.getElementById('book-issue-warning');
+      const submitIssueBtn = document.getElementById('submit-issue-btn');
+
+      // 5. State for Return Section
+      let selectedLoan = null;
+      const loanSearch = document.getElementById('return-loan-search');
+      const loanResults = document.getElementById('loan-lookup-results');
+      const loanCard = document.getElementById('selected-loan-card');
+      const clearLoanBtn = document.getElementById('clear-selected-loan-btn');
+      const submitReturnBtn = document.getElementById('submit-return-btn');
+      const returnOverdueAlertBox = document.getElementById('return-overdue-alert-box');
+
+      // 6. Member Autocomplete / Lookup
+      let memberTimer = null;
+      memberSearch.addEventListener('input', () => {
+        clearTimeout(memberTimer);
+        const query = memberSearch.value.trim();
+        if (query.length < 2) {
+          memberResults.classList.remove('show');
+          return;
+        }
+
+        memberTimer = setTimeout(async () => {
+          try {
+            const res = await window.api.get('/members', { search: query, limit: 5 });
+            const data = (res && res.data) ? res.data : (res || {});
+            const list = Array.isArray(data.members) ? data.members : (Array.isArray(data) ? data : []);
+
+            if (!list.length) {
+              memberResults.innerHTML = `<div class="lookup-item text-xs text-muted">No members found matching "${query}"</div>`;
+            } else {
+              memberResults.innerHTML = list.map(m => `
+                <div class="lookup-item" data-id="${m.member_id || m.id || m._id}">
+                  <div class="avatar avatar-sm">${(m.name||'M')[0]}</div>
+                  <div class="flex-col">
+                    <span class="font-semibold text-xs" style="color: var(--text);">${m.name}</span>
+                    <span class="text-xs text-secondary">${m.email} · <strong class="font-mono">${m.membership_number || ''}</strong></span>
+                  </div>
+                </div>
+              `).join('');
+
+              memberResults.querySelectorAll('.lookup-item[data-id]').forEach(item => {
+                item.addEventListener('click', () => {
+                  const mId = item.getAttribute('data-id');
+                  const found = list.find(m => String(m.member_id || m.id || m._id) === String(mId));
+                  if (found) selectMember(found);
+                });
+              });
+            }
+            memberResults.classList.add('show');
+          } catch (e) {
+            console.warn('Member lookup error:', e);
+          }
+        }, 300);
+      });
+
+      function selectMember(m) {
+        selectedMember = m;
+        memberResults.classList.remove('show');
+        memberSearch.value = '';
+
+        document.getElementById('selected-member-avatar').textContent = (m.name || 'M')[0];
+        document.getElementById('selected-member-name').textContent = m.name;
+        document.getElementById('selected-member-num').textContent = m.membership_number || 'N/A';
+        document.getElementById('selected-member-loans').textContent = m.active_loans ?? 0;
+        
+        const fines = Number(m.total_fines || 0);
+        const finesEl = document.getElementById('selected-member-fines');
+        finesEl.textContent = window.format ? window.format.currency(fines) : `Rs. ${fines}`;
+        finesEl.className = fines > 0 ? 'text-danger font-bold' : 'text-success font-bold';
+
+        // Check business rules
+        if (fines > 0) {
+          memberWarning.textContent = `Warning: Member has unpaid fines of ${finesEl.textContent}. Please clear fines prior to issuing.`;
+          memberWarning.style.display = 'block';
+        } else if (Number(m.active_loans || 0) >= 5) {
+          memberWarning.textContent = 'Warning: Member has reached maximum borrowing limit (5 books).';
+          memberWarning.style.display = 'block';
+        } else {
+          memberWarning.style.display = 'none';
+        }
+
+        memberCard.classList.add('active');
+      }
+
+      clearMemberBtn.addEventListener('click', () => {
+        selectedMember = null;
+        memberCard.classList.remove('active');
+        memberWarning.style.display = 'none';
+      });
+
+      // 7. Book Autocomplete / Lookup
+      let bookTimer = null;
+      bookSearch.addEventListener('input', () => {
+        clearTimeout(bookTimer);
+        const query = bookSearch.value.trim();
+        if (query.length < 2) {
+          bookResults.classList.remove('show');
+          return;
+        }
+
+        bookTimer = setTimeout(async () => {
+          try {
+            const res = await window.api.get('/books', { search: query, limit: 5 });
+            const data = (res && res.data) ? res.data : (res || {});
+            const list = Array.isArray(data.books) ? data.books : (Array.isArray(data) ? data : []);
+
+            if (!list.length) {
+              bookResults.innerHTML = `<div class="lookup-item text-xs text-muted">No books found matching "${query}"</div>`;
+            } else {
+              bookResults.innerHTML = list.map(b => `
+                <div class="lookup-item" data-id="${b.book_id || b.id || b._id}">
+                  <div class="flex-col">
+                    <span class="font-semibold text-xs" style="color: var(--text);">${b.title}</span>
+                    <span class="text-xs text-secondary">${b.author} · ISBN: ${b.isbn || 'N/A'} · <strong>${b.available_copies ?? 0} Avail</strong></span>
+                  </div>
+                </div>
+              `).join('');
+
+              bookResults.querySelectorAll('.lookup-item[data-id]').forEach(item => {
+                item.addEventListener('click', () => {
+                  const bId = item.getAttribute('data-id');
+                  const found = list.find(b => String(b.book_id || b.id || b._id) === String(bId));
+                  if (found) selectBook(found);
+                });
+              });
+            }
+            bookResults.classList.add('show');
+          } catch (e) {
+            console.warn('Book lookup error:', e);
+          }
+        }, 300);
+      });
+
+      function selectBook(b) {
+        selectedBook = b;
+        bookResults.classList.remove('show');
+        bookSearch.value = '';
+
+        document.getElementById('selected-book-title').textContent = b.title;
+        document.getElementById('selected-book-author').textContent = `by ${b.author}`;
+        
+        const avail = Number(b.available_copies ?? 0);
+        const availEl = document.getElementById('selected-book-avail');
+        availEl.textContent = `${avail} / ${b.total_copies ?? 1} copies`;
+        availEl.className = avail > 0 ? 'text-success font-bold' : 'text-danger font-bold';
+
+        const shelfText = window.format ? window.format.shelfLocation({
+          floor: b.floor,
+          section: b.section,
+          section_name: b.section_name,
+          rack: b.rack_number,
+          shelf: b.shelf_number
+        }) : 'Unassigned';
+        document.getElementById('selected-book-shelf').textContent = shelfText;
+
+        if (avail <= 0) {
+          bookWarning.textContent = 'This title is currently Out of Stock (0 available copies). Cannot issue.';
+          bookWarning.style.display = 'block';
+        } else {
+          bookWarning.style.display = 'none';
+        }
+
+        bookCard.classList.add('active');
+      }
+
+      clearBookBtn.addEventListener('click', () => {
+        selectedBook = null;
+        bookCard.classList.remove('active');
+        bookWarning.style.display = 'none';
+      });
+
+      // Close lookups when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#issue-member-search') && !e.target.closest('#member-lookup-results')) {
+          memberResults.classList.remove('show');
+        }
+        if (!e.target.closest('#issue-book-search') && !e.target.closest('#book-lookup-results')) {
+          bookResults.classList.remove('show');
+        }
+        if (!e.target.closest('#return-loan-search') && !e.target.closest('#loan-lookup-results')) {
+          loanResults.classList.remove('show');
+        }
+      });
+
+      // 8. Submit Issue Book Form
+      document.getElementById('issue-book-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!selectedMember) {
+          if (window.toast) window.toast.error('Please select a member first');
+          memberSearch.focus();
+          return;
+        }
+
+        if (!selectedBook) {
+          if (window.toast) window.toast.error('Please select a book to issue');
+          bookSearch.focus();
+          return;
+        }
+
+        if (Number(selectedBook.available_copies ?? 0) <= 0) {
+          if (window.toast) window.toast.error('Selected book has no available copies');
+          return;
+        }
+
+        const payload = {
+          book_id: selectedBook.book_id || selectedBook.id || selectedBook._id,
+          member_id: selectedMember.member_id || selectedMember.id || selectedMember._id,
+          due_date: dueDateInput.value
+        };
+
+        try {
+          submitIssueBtn.disabled = true;
+          submitIssueBtn.classList.add('loading');
+
+          const res = await window.api.post('/loans/issue', payload);
+          if (window.toast) {
+            window.toast.success(`Book "${selectedBook.title}" issued to ${selectedMember.name}! Due: ${dueDateInput.value}`);
+          }
+
+          // Reset issue form
+          clearMemberBtn.click();
+          clearBookBtn.click();
+          fetchRecentTransactions();
+        } catch (err) {
+          console.error('Issue book failed:', err);
+          if (window.toast) window.toast.error(err.message || 'Failed to issue book');
+        } finally {
+          submitIssueBtn.disabled = false;
+          submitIssueBtn.classList.remove('loading');
+        }
+      });
+
+      // 9. Return Section - Search Active Loans
+      let loanTimer = null;
+      loanSearch.addEventListener('input', () => {
+        clearTimeout(loanTimer);
+        const query = loanSearch.value.trim();
+        if (query.length < 2) {
+          loanResults.classList.remove('show');
+          return;
+        }
+
+        loanTimer = setTimeout(async () => {
+          try {
+            const res = await window.api.get('/loans', { status: 'ISSUED', search: query, limit: 5 });
+            const data = (res && res.data) ? res.data : (res || {});
+            const list = Array.isArray(data.loans) ? data.loans : (Array.isArray(data) ? data : []);
+
+            if (!list.length) {
+              loanResults.innerHTML = `<div class="lookup-item text-xs text-muted">No active loans found matching "${query}"</div>`;
+            } else {
+              loanResults.innerHTML = list.map(l => {
+                const bTitle = l.title || (l.book && l.book.title) || 'Book';
+                const mName = l.member_name || (l.user && l.user.name) || 'Member';
+                const due = window.format ? window.format.date(l.due_date) : l.due_date;
+
+                return `
+                  <div class="lookup-item" data-id="${l.loan_id || l.id || l._id}">
+                    <div class="flex-col">
+                      <span class="font-semibold text-xs" style="color: var(--text);">${bTitle}</span>
+                      <span class="text-xs text-secondary">Borrower: ${mName} · Due: <strong class="font-mono">${due}</strong></span>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+
+              loanResults.querySelectorAll('.lookup-item[data-id]').forEach(item => {
+                item.addEventListener('click', () => {
+                  const lId = item.getAttribute('data-id');
+                  const found = list.find(l => String(l.loan_id || l.id || l._id) === String(lId));
+                  if (found) selectLoan(found);
+                });
+              });
+            }
+            loanResults.classList.add('show');
+          } catch (e) {
+            console.warn('Loan search error:', e);
+          }
+        }, 300);
+      });
+
+      function selectLoan(loan) {
+        selectedLoan = loan;
+        loanResults.classList.remove('show');
+        loanSearch.value = '';
+
+        const bTitle = loan.title || (loan.book && loan.book.title) || 'Book Title';
+        const mName = loan.member_name || (loan.user && loan.user.name) || 'Member';
+        const mNum = loan.membership_number ? `#${loan.membership_number}` : '';
+
+        document.getElementById('return-book-title').textContent = bTitle;
+        document.getElementById('return-member-name').textContent = mName;
+        document.getElementById('return-member-num').textContent = mNum;
+
+        const fmt = window.format || { date: d => d ? new Date(d).toLocaleDateString() : '—', currency: n => `Rs. ${n}` };
+        document.getElementById('return-issue-date').textContent = fmt.date(loan.issue_date || loan.issued_at);
+        document.getElementById('return-due-date').textContent = fmt.date(loan.due_date);
+
+        // Check Overdue Status & Fine Calculation
+        const dueTime = new Date(loan.due_date).getTime();
+        const nowTime = new Date().getTime();
+        const isOverdue = dueTime < nowTime;
+
+        if (isOverdue) {
+          const overdueDays = Math.max(1, Math.floor((nowTime - dueTime) / (1000 * 60 * 60 * 24)));
+          const fineAmount = overdueDays * 5; // e.g. 5 rupees per day
+          returnOverdueAlertBox.innerHTML = `
+            <div class="p-2 mt-1 rounded" style="background: var(--danger-bg); border: 1px solid var(--danger-border);">
+              <span class="text-danger font-bold d-block">Overdue by ${overdueDays} day(s)!</span>
+              <span class="text-xs text-secondary">Calculated overdue fine: <strong class="text-danger">${fmt.currency(fineAmount)}</strong> (Rs. 5/day)</span>
+            </div>
+          `;
+        } else {
+          returnOverdueAlertBox.innerHTML = `
+            <div class="p-2 mt-1 rounded" style="background: var(--success-bg); border: 1px solid var(--success-border);">
+              <span class="text-success font-bold text-xs">&#10003; Return is on time. No overdue penalty assessed.</span>
+            </div>
+          `;
+        }
+
+        loanCard.classList.add('active');
+        submitReturnBtn.disabled = false;
+      }
+
+      clearLoanBtn.addEventListener('click', () => {
+        selectedLoan = null;
+        loanCard.classList.remove('active');
+        submitReturnBtn.disabled = true;
+      });
+
+      // 10. Submit Return Book
+      document.getElementById('return-book-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!selectedLoan) {
+          if (window.toast) window.toast.error('Please select an active loan to return');
+          return;
+        }
+
+        const loanId = selectedLoan.loan_id || selectedLoan.id || selectedLoan._id;
+
+        try {
+          submitReturnBtn.disabled = true;
+          submitReturnBtn.classList.add('loading');
+
+          const res = await window.api.post('/loans/return', { loan_id: loanId });
+          const data = (res && res.data) ? res.data : (res || {});
+
+          if (data.fine || data.fine_amount) {
+            const fine = window.format ? window.format.currency(data.fine || data.fine_amount) : `Rs. ${data.fine || data.fine_amount}`;
+            if (window.toast) {
+              window.toast.warning(`Book returned. Overdue fine assessed: ${fine}`);
+            }
+          } else {
+            if (window.toast) {
+              window.toast.success('Book returned and restocked into inventory successfully!');
+            }
+          }
+
+          clearLoanBtn.click();
+          fetchRecentTransactions();
+        } catch (err) {
+          console.error('Return loan failed:', err);
+          if (window.toast) window.toast.error(err.message || 'Failed to process return');
+        } finally {
+          submitReturnBtn.disabled = false;
+          submitReturnBtn.classList.remove('loading');
+        }
+      });
+
+      // 11. Fetch Recent Transactions Table
+      async function fetchRecentTransactions() {
+        const tbody = document.getElementById('recent-transactions-tbody');
+        try {
+          const res = await window.api.get('/loans', { limit: 10 });
+          const data = (res && res.data) ? res.data : (res || {});
+          const loans = Array.isArray(data.loans) ? data.loans : (Array.isArray(data) ? data : []);
+
+          if (!loans.length) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No circulation transactions recorded yet.</td></tr>`;
+            return;
+          }
+
+          const fmt = window.format || {
+            date: d => d ? new Date(d).toLocaleDateString() : '—',
+            statusBadge: s => `<span class="badge">${s}</span>`
+          };
+
+          tbody.innerHTML = loans.map(l => {
+            const title = l.title || (l.book && l.book.title) || 'Book Title';
+            const member = l.member_name || (l.user && l.user.name) || 'Member';
+            const issueDate = fmt.date(l.issue_date || l.issued_at);
+            const dueDate = fmt.date(l.due_date);
+            const returnDate = l.returned_at || l.return_date ? fmt.date(l.returned_at || l.return_date) : '<span class="text-muted">Not returned</span>';
+            const status = l.status || (l.returned_at ? 'RETURNED' : 'ISSUED');
+            const badge = fmt.statusBadge(status);
+
+            return `
+              <tr>
+                <td class="font-semibold text-sm" style="color: var(--text);">${title}</td>
+                <td>${member}</td>
+                <td class="text-xs font-mono">${issueDate}</td>
+                <td class="text-xs font-mono">${dueDate}</td>
+                <td class="text-xs font-mono">${returnDate}</td>
+                <td>${badge}</td>
+              </tr>
+            `;
+          }).join('');
+        } catch (e) {
+          console.warn('Failed to load recent transactions:', e);
+        }
+      }
+
+      // Initial Fetch
+      fetchRecentTransactions();
+    });
+  </script>
+</body>
+</html>

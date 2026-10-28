@@ -17,12 +17,12 @@ const notificationSchema = new mongoose.Schema(
   {
     // audience: "staff" = admin/librarian/staff; "member" = a specific member; "all" = everyone
     audience: { type: String, enum: ['staff', 'member', 'all'], default: 'staff' },
-    member: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
+    member: { type: mongoose.Schema.Types.Mixed, default: null },
     type: { type: String, enum: NOTIFICATION_TYPES, default: 'system' },
     title: { type: String, required: true },
     message: { type: String, required: true },
     link: { type: String, default: '' },
-    readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    readBy: [{ type: mongoose.Schema.Types.Mixed }],
   },
   { timestamps: true }
 );

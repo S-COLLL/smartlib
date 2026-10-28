@@ -1,0 +1,16 @@
+[
+  { "id": 1, "name": "Fiction", "icon": "📖", "description": "Novels, stories and literary fiction" },
+  { "id": 2, "name": "Science", "icon": "🔬", "description": "Physics, biology, astronomy and popular science" },
+  { "id": 3, "name": "Technology", "icon": "💡", "description": "Technology, innovation and artificial intelligence" },
+  { "id": 4, "name": "Programming", "icon": "💻", "description": "Software development, algorithms, and computer science" },
+  { "id": 5, "name": "Engineering", "icon": "⚙️", "description": "Core engineering textbooks, electrical, and mechanical" },
+  { "id": 6, "name": "Mathematics", "icon": "📐", "description": "Pure and applied mathematics, calculus, and algebra" },
+  { "id": 7, "name": "History", "icon": "🏛️", "description": "Indian and world history, civilizations and modern events" },
+  { "id": 8, "name": "Biography", "icon": "👤", "description": "Biographies, autobiographies, and inspirational memoirs" },
+  { "id": 9, "name": "Business", "icon": "📈", "description": "Finance, management, economics, and personal wealth" },
+  { "id": 10, "name": "Entrepreneurship", "icon": "🚀", "description": "Startups, venture building, and innovation strategy" },
+  { "id": 11, "name": "Competitive Exams", "icon": "🎯", "description": "UPSC, GATE, CAT, and general aptitude preparation" },
+  { "id": 12, "name": "Literature", "icon": "📚", "description": "Classical world literature, poetry, and reference dictionaries" }
+]
+
+make 

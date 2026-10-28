@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shelf Management · SMARTLIB</title>
+  <meta name="description" content="SMARTLIB Library Management System - Physical Shelf and Rack Layout Management">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .shelf-visual-banner {
+      background: radial-gradient(circle at 80% 20%, #4C1D95 0%, #21113D 70%, #150A29 100%);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-8);
+      color: #fff;
+      margin-bottom: var(--space-8);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(33, 17, 61, 0.25);
+    }
+    .shelf-visual-banner h2 { color: #fff; font-size: var(--text-2xl); font-weight: var(--font-extrabold); }
+    .shelves-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: var(--space-6);
+    }
+    .shelf-card {
+      background-color: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-3d);
+      transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .shelf-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-3d-hover);
+      border-color: var(--primary-300);
+    }
+    .shelf-capacity-track {
+      width: 100%;
+      height: 10px;
+      background: var(--bg-alt);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-top: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+    .shelf-capacity-bar {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width 0.8s ease-in-out;
+    }
+    .shelf-3d-icon {
+      width: 3.25rem;
+      height: 3.25rem;
+      border-radius: var(--radius-xl);
+      background: var(--gradient-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(109, 40, 217, 0.35);
+      flex-shrink: 0;
+    }
+    .shelf-book-thumb {
+      width: 44px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: var(--radius-xs);
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Dynamic Sidebar -->
+    <aside id="sidebar"></aside>
+
+    <!-- Top Header -->
+    <header id="top-header"></header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Breadcrumb -->
+      <nav aria-label="Breadcrumb">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/pages/admin-dashboard.html">SMARTLIB</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Shelf Management</li>
+        </ul>
+      </nav>
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="page-title-group">
+          <h1 class="page-title">Shelf &amp; Rack Management</h1>
+          <p class="page-subtitle">Configure floors, sections, rack capacities, and map bibliographic locations.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary btn-md" id="open-add-shelf-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            <span>Add New Shelf</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- 3D Shelf Visualization Overview Banner -->
+      <section class="shelf-visual-banner">
+        <div class="flex-between flex-wrap gap-4" style="position: relative; z-index: 2;">
+          <div>
+            <span class="badge badge-primary mb-2" style="background: rgba(255,255,255,0.15); color: #fff;">Physical Mapping</span>
+            <h2>Interactive Multi-Floor Storage Units</h2>
+            <p class="text-sm" style="color: var(--accent-light); max-width: 580px; margin-bottom: 0;">
+              Monitor real-time shelf occupancy, rack fill percentages, and locate where individual titles are physically stored across library wings.
+            </p>
+          </div>
+          <div class="flex-align-center gap-4">
+            <div class="text-center" style="background: rgba(255,255,255,0.08); padding: var(--space-3) var(--space-5); border-radius: var(--radius-lg); backdrop-filter: blur(8px);">
+              <span class="d-block text-2xl font-extrabold text-white" id="banner-total-shelves">0</span>
+              <span class="text-xs text-muted" style="color: var(--accent-light);">Total Shelves</span>
+            </div>
+            <div class="text-center" style="background: rgba(255,255,255,0.08); padding: var(--space-3) var(--space-5); border-radius: var(--radius-lg); backdrop-filter: blur(8px);">
+              <span class="d-block text-2xl font-extrabold text-white" id="banner-avg-occupancy">0%</span>
+              <span class="text-xs text-muted" style="color: var(--accent-light);">Avg Capacity</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Floor Filter Tabs & Section Selector -->
+      <section class="flex-between flex-wrap gap-4 mb-6">
+        <!-- Floor Tabs -->
+        <div class="floor-tabs" id="floor-tabs-container">
+          <button class="floor-tab-btn active" data-floor="">All Floors</button>
+          <button class="floor-tab-btn" data-floor="1">Floor 1</button>
+          <button class="floor-tab-btn" data-floor="2">Floor 2</button>
+          <button class="floor-tab-btn" data-floor="3">Floor 3</button>
+        </div>
+
+        <!-- Section and Search Filter -->
+        <div class="flex-align-center gap-3 flex-wrap">
+          <select class="form-select form-select-sm" id="section-filter-select" style="min-width: 170px;">
+            <option value="">All Sections</option>
+          </select>
+          <div class="search-bar" style="max-width: 240px;">
+            <span class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <input type="text" class="form-control form-control-sm" id="shelf-search-input" placeholder="Search rack or section..." />
+          </div>
+        </div>
+      </section>
+
+      <!-- Shelves Grid Container -->
+      <div id="shelves-loading-skeleton" class="shelves-grid">
+        <div class="skeleton" style="height: 220px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 220px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 220px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 220px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 220px; border-radius: var(--radius-xl);"></div>
+        <div class="skeleton" style="height: 220px; border-radius: var(--radius-xl);"></div>
+      </div>
+
+      <div class="shelves-grid" id="shelves-container" style="display: none;">
+        <!-- Dynamically injected shelf cards -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="shelves-empty-state" class="empty-state" style="display: none; margin-top: var(--space-6);">
+        <div class="empty-state-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16M6 4v16M18 4v16"/></svg>
+        </div>
+        <h3 class="empty-state-title">No Shelves Found</h3>
+        <p class="empty-state-desc">No shelf units match the current floor and section criteria.</p>
+        <button class="btn btn-primary btn-sm" id="empty-add-shelf-btn">Create First Shelf</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules in strict order -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Role Protection Guard
+      if (!window.auth || !window.auth.requireAuth(['admin', 'librarian'])) {
+        return;
+      }
+
+      // 2. Navigation Init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      // 3. State
+      let allShelves = [];
+      let currentFloor = '';
+      let currentSection = '';
+      let searchQuery = '';
+
+      // Elements
+      const skeleton = document.getElementById('shelves-loading-skeleton');
+      const container = document.getElementById('shelves-container');
+      const emptyState = document.getElementById('shelves-empty-state');
+      const floorTabsContainer = document.getElementById('floor-tabs-container');
+      const sectionFilterSelect = document.getElementById('section-filter-select');
+      const searchInput = document.getElementById('shelf-search-input');
+      const openAddBtn = document.getElementById('open-add-shelf-btn');
+      const emptyAddBtn = document.getElementById('empty-add-shelf-btn');
+      const bannerTotalShelves = document.getElementById('banner-total-shelves');
+      const bannerAvgOccupancy = document.getElementById('banner-avg-occupancy');
+
+      // 4. Fetch Shelves and Floors
+      async function loadFloors() {
+        try {
+          const res = await window.api.get('/shelves/floors');
+          const floors = Array.isArray(res) ? res : ((res && res.data && Array.isArray(res.data)) ? res.data : [1, 2, 3]);
+
+          if (floors.length) {
+            let html = `<button class="floor-tab-btn active" data-floor="">All Floors</button>`;
+            floors.sort((a,b) => a - b).forEach(f => {
+              html += `<button class="floor-tab-btn" data-floor="${f}">Floor ${f}</button>`;
+            });
+            floorTabsContainer.innerHTML = html;
+            bindFloorTabEvents();
+          }
+        } catch (e) {
+          console.warn('Failed to load custom floors:', e);
+        }
+      }
+
+      async function fetchShelves() {
+        try {
+          skeleton.style.display = 'grid';
+          container.style.display = 'none';
+          emptyState.style.display = 'none';
+
+          const params = {};
+          if (currentFloor) params.floor = currentFloor;
+          if (currentSection) params.section = currentSection;
+
+          const res = await window.api.get('/shelves', params);
+          const shelves = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+          allShelves = shelves;
+
+          populateSectionFilter(shelves);
+          updateBannerMetrics(shelves);
+          renderShelvesList();
+        } catch (err) {
+          console.error('Failed to load shelves:', err);
+          if (window.toast) window.toast.error(err.message || 'Failed to fetch shelves');
+          skeleton.style.display = 'none';
+          emptyState.style.display = 'block';
+        }
+      }
+
+      function populateSectionFilter(shelves) {
+        const sections = new Set();
+        shelves.forEach(s => {
+          const sec = s.section || s.section_name;
+          if (sec) sections.add(sec);
+        });
+
+        const currentVal = sectionFilterSelect.value;
+        sectionFilterSelect.innerHTML = '<option value="">All Sections</option>';
+        Array.from(sections).sort().forEach(sec => {
+          const opt = document.createElement('option');
+          opt.value = sec;
+          opt.textContent = `Section ${sec}`;
+          if (sec === currentVal) opt.selected = true;
+          sectionFilterSelect.appendChild(opt);
+        });
+      }
+
+      function updateBannerMetrics(shelves) {
+        bannerTotalShelves.textContent = shelves.length;
+        if (!shelves.length) {
+          bannerAvgOccupancy.textContent = '0%';
+          return;
+        }
+
+        let totalCap = 0;
+        let totalBooks = 0;
+        shelves.forEach(s => {
+          totalCap += Number(s.capacity || 50);
+          totalBooks += Number(s.book_count || s.books_count || (s.books ? s.books.length : 0));
+        });
+
+        const avgPct = totalCap > 0 ? Math.round((totalBooks / totalCap) * 100) : 0;
+        bannerAvgOccupancy.textContent = `${avgPct}%`;
+      }
+
+      // 5. Filter and Render Shelves
+      function renderShelvesList() {
+        skeleton.style.display = 'none';
+
+        let filtered = allShelves.filter(s => {
+          const matchesFloor = !currentFloor || String(s.floor) === String(currentFloor);
+          const matchesSection = !currentSection || (s.section === currentSection || s.section_name === currentSection);
+          const matchesSearch = !searchQuery || 
+            (s.section_name && s.section_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (s.notes && s.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            `rack ${s.rack_number} shelf ${s.shelf_number}`.includes(searchQuery.toLowerCase());
+
+          return matchesFloor && matchesSection && matchesSearch;
+        });
+
+        if (!filtered.length) {
+          container.style.display = 'none';
+          emptyState.style.display = 'block';
+          return;
+        }
+
+        emptyState.style.display = 'none';
+        container.style.display = 'grid';
+
+        let html = '';
+        filtered.forEach(shelf => {
+          const id = shelf.shelf_id || shelf.id || shelf._id;
+          const floor = shelf.floor ?? 1;
+          const section = shelf.section || 'A';
+          const sectionName = shelf.section_name || `Section ${section}`;
+          const rack = shelf.rack_number ?? 1;
+          const shelfNum = shelf.shelf_number ?? 1;
+          const capacity = Number(shelf.capacity || 50);
+          const booksCount = Number(shelf.book_count ?? shelf.books_count ?? (shelf.books ? shelf.books.length : 0));
+          const notes = shelf.notes || 'Standard collection rack';
+
+          const pct = Math.min(100, Math.round((booksCount / capacity) * 100));
+          let barColor = 'linear-gradient(90deg, #10B981 0%, #059669 100%)';
+          let statusText = 'Spacious';
+          if (pct >= 90) {
+            barColor = 'linear-gradient(90deg, #EF4444 0%, #DC2626 100%)';
+            statusText = 'Nearly Full';
+          } else if (pct >= 70) {
+            barColor = 'linear-gradient(90deg, #F59E0B 0%, #D97706 100%)';
+            statusText = 'Moderate';
+          }
+
+          html += `
+            <div class="shelf-card card-3d" data-shelf-id="${id}">
+              <div class="flex-between mb-4">
+                <div class="flex-align-center gap-3">
+                  <div class="shelf-3d-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16M6 4v16M18 4v16"/></svg>
+                  </div>
+                  <div>
+                    <span class="badge badge-primary" style="font-size: 0.7rem;">Floor ${floor} · Sec ${section}</span>
+                    <h4 class="font-bold text-base mt-1" style="color: var(--text);">${sectionName}</h4>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="font-mono text-xs font-bold text-primary">R${rack} · S${shelfNum}</span>
+                </div>
+              </div>
+
+              <div class="flex-between text-xs text-secondary mt-1">
+                <span>Capacity Gauge</span>
+                <span class="font-bold" style="color: var(--text);">${booksCount} / ${capacity} books (${pct}%)</span>
+              </div>
+              <div class="shelf-capacity-track">
+                <div class="shelf-capacity-bar" style="width: ${Math.max(pct, 4)}%; background: ${barColor};"></div>
+              </div>
+
+              <p class="text-xs text-muted mb-4" style="line-height: 1.4; min-height: 32px;">${notes}</p>
+
+              <div class="flex-between pt-3" style="border-top: 1px solid var(--border-light); margin-top: auto;">
+                <button class="btn btn-secondary btn-sm view-shelf-books-btn" data-id="${id}" title="View Books on this Shelf">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span>Books (${booksCount})</span>
+                </button>
+                <div class="table-actions">
+                  <button class="btn btn-icon btn-ghost btn-sm edit-shelf-btn" data-id="${id}" title="Edit Shelf Configuration">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                  </button>
+                  <button class="btn btn-icon btn-ghost btn-sm delete-shelf-btn" data-id="${id}" data-books="${booksCount}" title="Delete Shelf" style="color: var(--danger);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+        bindShelfCardActions();
+
+        if (window.effects) {
+          window.effects.init();
+        }
+      }
+
+      // 6. Bind Shelf Card Actions
+      function bindShelfCardActions() {
+        // View Books on Shelf
+        container.querySelectorAll('.view-shelf-books-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            await showBooksOnShelfModal(id);
+          });
+        });
+
+        // Edit Shelf Modal
+        container.querySelectorAll('.edit-shelf-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const shelf = allShelves.find(s => String(s.shelf_id || s.id || s._id) === String(id));
+            if (shelf) openAddOrEditShelfModal(shelf);
+          });
+        });
+
+        // Delete Shelf
+        container.querySelectorAll('.delete-shelf-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            const booksCount = parseInt(btn.getAttribute('data-books'), 10) || 0;
+
+            if (booksCount > 0) {
+              if (window.modal) {
+                window.modal.alert(
+                  'Cannot Delete Shelf',
+                  `This shelf currently contains <strong>${booksCount} books</strong>. You must reassign or remove all cataloged books before deleting this shelf unit.`
+                );
+              }
+              return;
+            }
+
+            if (!window.modal) return;
+            const confirmed = await window.modal.confirm(
+              'Delete Shelf Unit',
+              'Are you sure you want to permanently delete this shelf? This action cannot be undone.',
+              { confirmClass: 'btn-danger', confirmText: 'Yes, Delete' }
+            );
+
+            if (confirmed) {
+              try {
+                await window.api.delete(`/shelves/${id}`);
+                if (window.toast) window.toast.success('Shelf removed successfully');
+                fetchShelves();
+              } catch (err) {
+                console.error('Delete shelf failed:', err);
+                if (window.toast) window.toast.error(err.message || 'Failed to delete shelf');
+              }
+            }
+          });
+        });
+      }
+
+      // 7. Show Books on Shelf Modal
+      async function showBooksOnShelfModal(shelfId) {
+        if (!window.modal) return;
+
+        try {
+          const res = await window.api.get(`/shelves/${shelfId}`);
+          const shelf = (res && res.data) ? res.data : (res || {});
+          const books = Array.isArray(shelf.books) ? shelf.books : [];
+
+          const locTitle = `Floor ${shelf.floor} · Section ${shelf.section || ''} (${shelf.section_name || ''}) — Rack ${shelf.rack_number}, Shelf ${shelf.shelf_number}`;
+
+          let booksHtml = '';
+          if (!books.length) {
+            booksHtml = `<p class="text-center text-muted py-5 text-sm">No books currently stored on this shelf.</p>`;
+          } else {
+            booksHtml = `
+              <div class="table-container" style="max-height: 380px; margin-bottom: 0;">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th style="width: 50px;">Cover</th>
+                      <th>Title &amp; Author</th>
+                      <th>ISBN</th>
+                      <th>Available</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${books.map(b => {
+                      const bId = b.book_id || b.id || b._id;
+                      const title = b.title || 'Untitled';
+                      const author = b.author || 'Unknown';
+                      const isbn = b.isbn || '—';
+                      const avail = b.available_copies ?? 0;
+                      const total = b.total_copies ?? 1;
+                      const cover = b.cover_image ? `<img src="${b.cover_image}" alt="${title}" class="shelf-book-thumb" />` :
+                        `<div class="shelf-book-thumb flex-center" style="background: var(--gradient-primary); color: #fff;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg></div>`;
+
+                      return `
+                        <tr>
+                          <td>${cover}</td>
+                          <td>
+                            <span class="font-semibold text-sm d-block text-truncate" style="max-width: 220px;">${title}</span>
+                            <span class="text-xs text-secondary">${author}</span>
+                          </td>
+                          <td class="font-mono text-xs">${isbn}</td>
+                          <td><span class="badge ${avail > 0 ? 'badge-available' : 'badge-issued'}">${avail}/${total}</span></td>
+                          <td>
+                            <a href="/pages/book-form.html?id=${bId}" class="btn btn-secondary btn-sm" target="_blank">Edit</a>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          }
+
+          window.modal.open({
+            title: `Shelf Inventory (${books.length} Books)`,
+            content: `
+              <div class="mb-3">
+                <span class="text-xs font-semibold text-primary">${locTitle}</span>
+              </div>
+              ${booksHtml}
+            `,
+            size: 'lg',
+            showCancel: false,
+            confirmText: 'Done',
+            confirmClass: 'btn-primary'
+          });
+        } catch (err) {
+          console.error('Failed to load shelf books:', err);
+          if (window.toast) window.toast.error('Could not load shelf inventory');
+        }
+      }
+
+      // 8. Add or Edit Shelf Modal
+      function openAddOrEditShelfModal(existing = null) {
+        if (!window.modal) return;
+        const isEdit = !!existing;
+        const id = isEdit ? (existing.shelf_id || existing.id || existing._id) : '';
+
+        const floor = existing ? existing.floor : (currentFloor || 1);
+        const section = existing ? existing.section : 'A';
+        const sectionName = existing ? (existing.section_name || '') : '';
+        const rackNumber = existing ? existing.rack_number : 1;
+        const shelfNumber = existing ? existing.shelf_number : 1;
+        const capacity = existing ? existing.capacity : 50;
+        const notes = existing ? (existing.notes || '') : '';
+
+        const modalHtml = `
+          <form id="shelf-modal-form" novalidate>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+              <div class="form-group">
+                <label class="form-label" for="m-shelf-floor">Floor Number <span class="required">*</span></label>
+                <input type="number" class="form-control font-mono" id="m-shelf-floor" name="floor" min="1" max="10" value="${floor}" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="m-shelf-section">Section Code <span class="required">*</span></label>
+                <input type="text" class="form-control text-uppercase font-mono" id="m-shelf-section" name="section" maxlength="4" value="${section}" required placeholder="A" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="m-shelf-section-name">Section Name / Category</label>
+              <input type="text" class="form-control" id="m-shelf-section-name" name="section_name" value="${sectionName}" placeholder="e.g. Computer Science &amp; Artificial Intelligence" />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+              <div class="form-group">
+                <label class="form-label" for="m-shelf-rack">Rack Number <span class="required">*</span></label>
+                <input type="number" class="form-control font-mono" id="m-shelf-rack" name="rack_number" min="1" value="${rackNumber}" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="m-shelf-number">Shelf Tier Number <span class="required">*</span></label>
+                <input type="number" class="form-control font-mono" id="m-shelf-number" name="shelf_number" min="1" value="${shelfNumber}" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="m-shelf-capacity">Book Capacity <span class="required">*</span></label>
+              <input type="number" class="form-control font-mono" id="m-shelf-capacity" name="capacity" min="5" max="500" value="${capacity}" required />
+            </div>
+
+            <div class="form-group mb-0">
+              <label class="form-label" for="m-shelf-notes">Notes &amp; Location Hints</label>
+              <textarea class="form-textarea" id="m-shelf-notes" name="notes" rows="3" placeholder="e.g. West Wing, next to reading carrel #4">${notes}</textarea>
+            </div>
+          </form>
+        `;
+
+        window.modal.open({
+          title: isEdit ? 'Edit Shelf Configuration' : 'Add New Shelf Unit',
+          content: modalHtml,
+          size: 'md',
+          confirmText: isEdit ? 'Save Changes' : 'Create Shelf',
+          confirmClass: 'btn-primary',
+          onConfirm: () => {
+            const formEl = document.getElementById('shelf-modal-form');
+            if (window.validate) {
+              const ok = window.validate.validateForm(formEl, {
+                floor: { required: true, number: true, min: 1 },
+                section: { required: true },
+                rack_number: { required: true, number: true, min: 1 },
+                shelf_number: { required: true, number: true, min: 1 },
+                capacity: { required: true, number: true, min: 1 }
+              });
+              if (!ok) return false;
+            }
+
+            const payload = {
+              floor: parseInt(document.getElementById('m-shelf-floor').value, 10),
+              section: document.getElementById('m-shelf-section').value.trim().toUpperCase(),
+              section_name: document.getElementById('m-shelf-section-name').value.trim() || null,
+              rack_number: parseInt(document.getElementById('m-shelf-rack').value, 10),
+              shelf_number: parseInt(document.getElementById('m-shelf-number').value, 10),
+              capacity: parseInt(document.getElementById('m-shelf-capacity').value, 10),
+              notes: document.getElementById('m-shelf-notes').value.trim() || null
+            };
+
+            (async () => {
+              try {
+                if (isEdit) {
+                  await window.api.put(`/shelves/${id}`, payload);
+                  if (window.toast) window.toast.success('Shelf updated successfully');
+                } else {
+                  await window.api.post('/shelves', payload);
+                  if (window.toast) window.toast.success('New shelf created successfully');
+                }
+                fetchShelves();
+              } catch (err) {
+                console.error('Shelf save failed:', err);
+                if (window.toast) window.toast.error(err.message || 'Failed to save shelf');
+              }
+            })();
+
+            return true;
+          }
+        });
+      }
+
+      // 9. Floor Tab Events
+      function bindFloorTabEvents() {
+        floorTabsContainer.querySelectorAll('.floor-tab-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            floorTabsContainer.querySelectorAll('.floor-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFloor = btn.getAttribute('data-floor') || '';
+            renderShelvesList();
+          });
+        });
+      }
+
+      // 10. Filter & Search listeners
+      sectionFilterSelect.addEventListener('change', () => {
+        currentSection = sectionFilterSelect.value;
+        renderShelvesList();
+      });
+
+      searchInput.addEventListener('input', () => {
+        searchQuery = searchInput.value.trim();
+        renderShelvesList();
+      });
+
+      openAddBtn.addEventListener('click', () => openAddOrEditShelfModal());
+      emptyAddBtn.addEventListener('click', () => openAddOrEditShelfModal());
+
+      // 11. Init
+      loadFloors();
+      fetchShelves();
+    });
+  </script>
+</body>
+</html>

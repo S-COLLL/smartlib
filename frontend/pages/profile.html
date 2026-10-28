@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile · SMARTLIB</title>
+  <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .digital-member-card {
+      background: linear-gradient(135deg, #4C1D95 0%, #21113D 100%);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-6);
+      color: #FFFFFF;
+      box-shadow: 0 12px 30px rgba(76, 29, 149, 0.35);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .digital-member-card::after {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -30px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .profile-section-card {
+      background-color: var(--surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: var(--space-8);
+      box-shadow: var(--shadow-sm);
+    }
+    .profile-hero-card {
+      background-color: var(--surface);
+      border-radius: var(--radius-2xl);
+      border: 1px solid var(--border);
+      padding: var(--space-8);
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      margin-bottom: var(--space-8);
+      box-shadow: var(--shadow-sm);
+      flex-wrap: wrap;
+    }
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4);
+      background-color: var(--bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header" id="top-header"></header>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <ul class="breadcrumb" aria-label="Breadcrumb">
+            <li class="breadcrumb-item"><a href="/pages/member-dashboard.html">Dashboard</a></li>
+            <li class="breadcrumb-separator">/</li>
+            <li class="breadcrumb-item active" aria-current="page">My Profile</li>
+          </ul>
+          <h1 class="page-title">My Profile & Account Settings</h1>
+          <p class="page-subtitle">Manage your personal library credentials, contact details, password, and account statistics.</p>
+        </div>
+      </div>
+
+      <!-- Profile Hero Card -->
+      <div class="profile-hero-card" id="profile-hero">
+        <div id="profile-avatar-container">
+          <div class="avatar avatar-xl"><span>U</span></div>
+        </div>
+        <div class="flex-col flex-1" style="min-width: 220px;">
+          <div class="flex-align-center gap-3 flex-wrap">
+            <h2 class="text-2xl font-extrabold" id="profile-hero-name" style="margin-bottom: 0;">Loading...</h2>
+            <span class="badge badge-available" id="profile-hero-status"><span class="badge-dot"></span>Active Member</span>
+          </div>
+          <span class="text-sm text-secondary font-mono" id="profile-hero-email" style="margin-top: 4px;">—</span>
+          <div class="flex-align-center gap-4 text-xs text-muted flex-wrap" style="margin-top: var(--space-3);">
+            <span>Membership No: <strong id="profile-hero-mem-number" class="text-primary font-mono">—</strong></span>
+            <span>&bull;</span>
+            <span>Member Since: <strong id="profile-hero-joined">—</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Layout: 2 Columns (Form & Password vs Stats & Member ID) -->
+      <div class="grid-sidebar-layout" style="grid-template-columns: 1fr 340px;">
+        <!-- Left Column: Forms -->
+        <div class="flex-col gap-8">
+          <!-- Profile Details Form Card -->
+          <div class="profile-section-card">
+            <h3 class="text-xl font-bold" style="margin-bottom: var(--space-1); color: var(--text);">Personal Information</h3>
+            <p class="text-xs text-secondary" style="margin-bottom: var(--space-6);">Update your name, contact phone number, and academic department details.</p>
+
+            <form id="profile-info-form" novalidate>
+              <div class="grid-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="input-profile-name">Full Name <span class="required">*</span></label>
+                  <input type="text" class="form-control" id="input-profile-name" required placeholder="Your full name" />
+                  <span class="form-error" id="error-profile-name" style="display: none;"></span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="input-profile-email">Email Address <span class="text-muted">(Primary Identifier)</span></label>
+                  <div class="input-with-icon">
+                    <input type="email" class="form-control" id="input-profile-email" readonly disabled style="background-color: var(--bg-alt); cursor: not-allowed;" />
+                  </div>
+                  <span class="form-hint">Email is linked to your institutional identity and cannot be altered directly.</span>
+                </div>
+              </div>
+
+              <div class="grid-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="input-profile-phone">Phone Number <span class="required">*</span></label>
+                  <input type="tel" class="form-control" id="input-profile-phone" placeholder="e.g. 9876543210" />
+                  <span class="form-error" id="error-profile-phone" style="display: none;"></span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="input-profile-membership">Membership Card ID</label>
+                  <input type="text" class="form-control font-mono" id="input-profile-membership" readonly disabled style="background-color: var(--bg-alt); cursor: not-allowed;" />
+                </div>
+              </div>
+
+              <div class="grid-3 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="input-profile-dept">Department</label>
+                  <input type="text" class="form-control" id="input-profile-dept" placeholder="e.g. Computer Science" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="input-profile-course">Course / Degree</label>
+                  <input type="text" class="form-control" id="input-profile-course" placeholder="e.g. B.Tech / B.Sc" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="input-profile-year">Academic Year</label>
+                  <input type="text" class="form-control" id="input-profile-year" placeholder="e.g. 3rd Year" />
+                </div>
+              </div>
+
+              <div class="flex-align-center justify-content-end" style="margin-top: var(--space-4);">
+                <button type="submit" class="btn btn-primary" id="save-profile-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span>Save Changes</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Change Password Section Card -->
+          <div class="profile-section-card">
+            <h3 class="text-xl font-bold" style="margin-bottom: var(--space-1); color: var(--text);">Change Security Password</h3>
+            <p class="text-xs text-secondary" style="margin-bottom: var(--space-6);">Ensure your account uses a secure password with at least 6 characters.</p>
+
+            <form id="change-password-form" novalidate>
+              <div class="form-group">
+                <label class="form-label" for="input-current-pwd">Current Password <span class="required">*</span></label>
+                <input type="password" class="form-control" id="input-current-pwd" required placeholder="Enter current password" />
+                <span class="form-error" id="error-current-pwd" style="display: none;"></span>
+              </div>
+
+              <div class="grid-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="input-new-pwd">New Password <span class="required">*</span></label>
+                  <input type="password" class="form-control" id="input-new-pwd" required placeholder="Minimum 6 characters" />
+                  <span class="form-error" id="error-new-pwd" style="display: none;"></span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="input-confirm-pwd">Confirm New Password <span class="required">*</span></label>
+                  <input type="password" class="form-control" id="input-confirm-pwd" required placeholder="Confirm new password" />
+                  <span class="form-error" id="error-confirm-pwd" style="display: none;"></span>
+                </div>
+              </div>
+
+              <div class="flex-align-center justify-content-end" style="margin-top: var(--space-4);">
+                <button type="submit" class="btn btn-secondary" id="change-pwd-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <span>Update Password</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Column: Digital Member ID & Statistics -->
+        <div class="flex-col gap-6">
+          <!-- Digital Library Card -->
+          <div class="digital-member-card">
+            <div class="flex-between" style="margin-bottom: var(--space-6);">
+              <div class="flex-align-center gap-2">
+                <div style="width: 28px; height: 28px; background: rgba(255,255,255,0.2); border-radius: var(--radius-sm); display:flex; align-items:center; justify-content:center;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+                </div>
+                <span class="font-extrabold tracking-wide" style="font-size: 0.95rem; letter-spacing: 0.05em;">SMARTLIB PASS</span>
+              </div>
+              <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; border: none; font-size: 0.7rem;">MEMBER</span>
+            </div>
+
+            <div style="margin-bottom: var(--space-6);">
+              <div class="text-xs" style="color: var(--accent-light); margin-bottom: 2px;">MEMBER NAME</div>
+              <div class="text-lg font-bold" id="card-holder-name">—</div>
+            </div>
+
+            <div class="flex-between flex-align-end">
+              <div>
+                <div class="text-xs" style="color: var(--accent-light); margin-bottom: 2px;">CARD NUMBER</div>
+                <div class="font-mono text-sm font-bold tracking-widest" id="card-holder-number">—</div>
+                <div class="text-xs" style="color: rgba(255,255,255,0.7); margin-top: 4px;">SCAN FOR ACCESS</div>
+              </div>
+              <div style="background: #fff; padding: 4px; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); width: 68px; height: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                <img src="../assets/images/smartlib-qr.jpg" alt="SMARTLIB Access QR Code" style="width: 100%; height: 100%; object-fit: contain; border-radius: 2px;" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Account Statistics Card -->
+          <div class="profile-section-card">
+            <h4 class="text-base font-bold" style="margin-bottom: var(--space-4); color: var(--text);">Account Overview</h4>
+            <div class="flex-col gap-3">
+              <div class="stat-pill">
+                <div class="flex-align-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>
+                  <span class="text-xs font-semibold text-secondary">Total Borrowed:</span>
+                </div>
+                <span class="text-sm font-extrabold text-primary" id="stat-total-borrowed">—</span>
+              </div>
+
+              <div class="stat-pill">
+                <div class="flex-align-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--warning);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span class="text-xs font-semibold text-secondary">Active Loans:</span>
+                </div>
+                <span class="text-sm font-extrabold" id="stat-active-loans">—</span>
+              </div>
+
+              <div class="stat-pill">
+                <div class="flex-align-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--success);"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"/><path d="M16 8h-8"/><path d="M16 12h-8"/><path d="M12 16H8"/></svg>
+                  <span class="text-xs font-semibold text-secondary">Fines Paid:</span>
+                </div>
+                <span class="text-sm font-extrabold text-success" id="stat-fines-paid">—</span>
+              </div>
+
+              <div class="stat-pill">
+                <div class="flex-align-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #FBBF24;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span class="text-xs font-semibold text-secondary">Reviews Written:</span>
+                </div>
+                <span class="text-sm font-extrabold" id="stat-reviews-written">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared JS Modules -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/toast.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/3d-effects.js"></script>
+  <script src="../js/navigation.js"></script>
+
+  <!-- Page Specific Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Guard route
+      if (!window.auth || !window.auth.requireAuth(['member'])) {
+        return;
+      }
+
+      // 2. Navigation init
+      if (window.navigation) {
+        window.navigation.init();
+      }
+
+      let cachedUser = window.auth.getUser() || {};
+
+      // 3. Populate initial profile details
+      function populateProfile(user, member) {
+        const name = user.name || (member && member.name) || 'Member';
+        const email = user.email || (member && member.email) || '';
+        const phone = (member && member.phone) || user.phone || '';
+        const memNum = (member && member.membership_number) || user.membership_number || user.member_id || `ID: #${user.id || '101'}`;
+        const joinedDate = window.format ? window.format.date((member && member.created_at) || user.created_at || new Date()) : 'Active';
+        const dept = (member && member.department) || user.department || '';
+        const course = (member && member.course) || user.course || '';
+        const year = (member && member.year) || user.year || '';
+
+        // Hero
+        document.getElementById('profile-hero-name').textContent = name;
+        document.getElementById('profile-hero-email').textContent = email;
+        document.getElementById('profile-hero-mem-number').textContent = memNum;
+        document.getElementById('profile-hero-joined').textContent = joinedDate;
+        document.getElementById('profile-avatar-container').innerHTML = window.format ? window.format.avatar(name, user.avatar, 'xl') : `<div class="avatar avatar-xl"><span>${name.charAt(0)}</span></div>`;
+
+        // Card
+        document.getElementById('card-holder-name').textContent = name.toUpperCase();
+        document.getElementById('card-holder-number').textContent = memNum;
+
+        // Form inputs
+        document.getElementById('input-profile-name').value = name;
+        document.getElementById('input-profile-email').value = email;
+        document.getElementById('input-profile-phone').value = phone;
+        document.getElementById('input-profile-membership').value = memNum;
+        document.getElementById('input-profile-dept').value = dept;
+        document.getElementById('input-profile-course').value = course;
+        document.getElementById('input-profile-year').value = year;
+      }
+
+      populateProfile(cachedUser, null);
+
+      // 4. Fetch fresh user profile from backend
+      try {
+        const meRes = await window.api.get('/auth/me');
+        if (meRes && (meRes.user || meRes.data)) {
+          const freshUser = meRes.user || (meRes.data && meRes.data.user) || meRes.data;
+          const freshMember = meRes.member || (meRes.data && meRes.data.member) || null;
+          cachedUser = { ...cachedUser, ...freshUser };
+          window.auth.updateUser(cachedUser);
+          populateProfile(cachedUser, freshMember);
+        }
+      } catch (err) {
+        console.warn('Could not fetch latest /auth/me profile:', err);
+      }
+
+      // 5. Fetch statistics for member
+      async function loadMemberStats() {
+        try {
+          const [loansRes, activeLoansRes, finesRes, reviewsRes] = await Promise.allSettled([
+            window.api.get('/loans/my'),
+            window.api.get('/loans/my', { status: 'active' }),
+            window.api.get('/fines/my'),
+            window.api.get('/reviews/my')
+          ]);
+
+          let totalBorrowed = 0;
+          if (loansRes.status === 'fulfilled' && loansRes.value) {
+            const data = loansRes.value.data || loansRes.value || [];
+            totalBorrowed = (loansRes.value.pagination && loansRes.value.pagination.total) || data.length;
+          }
+
+          let activeLoans = 0;
+          if (activeLoansRes.status === 'fulfilled' && activeLoansRes.value) {
+            const data = activeLoansRes.value.data || activeLoansRes.value || [];
+            activeLoans = data.length;
+          }
+
+          let totalFinesPaid = 0;
+          if (finesRes.status === 'fulfilled' && finesRes.value) {
+            const data = finesRes.value.data || finesRes.value || [];
+            totalFinesPaid = data
+              .filter(f => (f.status || '').toLowerCase() === 'paid')
+              .reduce((acc, f) => acc + (Number(f.paid_amount || f.amount) || 0), 0);
+          }
+
+          let totalReviews = 0;
+          if (reviewsRes.status === 'fulfilled' && reviewsRes.value) {
+            const data = reviewsRes.value.data || reviewsRes.value || [];
+            totalReviews = data.length;
+          }
+
+          document.getElementById('stat-total-borrowed').textContent = String(totalBorrowed);
+          document.getElementById('stat-active-loans').textContent = `${activeLoans} / 3`;
+          document.getElementById('stat-fines-paid').textContent = window.format ? window.format.currency(totalFinesPaid) : `Rs. ${totalFinesPaid}`;
+          document.getElementById('stat-reviews-written').textContent = String(totalReviews);
+        } catch (e) {
+          console.error('Error fetching member stats:', e);
+        }
+      }
+
+      loadMemberStats();
+
+      // 6. Handle Profile Form Submit
+      const infoForm = document.getElementById('profile-info-form');
+      const saveBtn = document.getElementById('save-profile-btn');
+
+      infoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Reset errors
+        const nameError = document.getElementById('error-profile-name');
+        const phoneError = document.getElementById('error-profile-phone');
+        nameError.style.display = 'none';
+        phoneError.style.display = 'none';
+
+        const name = document.getElementById('input-profile-name').value.trim();
+        const phone = document.getElementById('input-profile-phone').value.trim();
+        const dept = document.getElementById('input-profile-dept').value.trim();
+        const course = document.getElementById('input-profile-course').value.trim();
+        const year = document.getElementById('input-profile-year').value.trim();
+
+        let hasError = false;
+
+        if (!name) {
+          nameError.textContent = 'Full name is required.';
+          nameError.style.display = 'block';
+          hasError = true;
+        }
+
+        if (phone && window.validate && !window.validate.phone(phone)) {
+          phoneError.textContent = 'Please enter a valid phone number (7-15 digits).';
+          phoneError.style.display = 'block';
+          hasError = true;
+        }
+
+        if (hasError) return;
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner spinner-sm"></span> Saving...';
+
+        try {
+          const updatePayload = {
+            name,
+            phone,
+            department: dept,
+            course,
+            year
+          };
+
+          const res = await window.api.put('/auth/me', updatePayload);
+          const updatedUser = (res && res.data && res.data.user) || { ...cachedUser, ...updatePayload };
+          window.auth.updateUser(updatedUser);
+
+          // Update UI
+          populateProfile(updatedUser, (res && res.data && res.data.member) || null);
+          window.toast.success('Your profile details were updated successfully!', 'Profile Saved');
+        } catch (err) {
+          window.toast.error(err.message || 'Failed to update profile.', 'Error');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Save Changes</span>
+          `;
+        }
+      });
+
+      // 7. Handle Change Password Form Submit
+      const pwdForm = document.getElementById('change-password-form');
+      const pwdBtn = document.getElementById('change-pwd-btn');
+
+      pwdForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const errCurrent = document.getElementById('error-current-pwd');
+        const errNew = document.getElementById('error-new-pwd');
+        const errConfirm = document.getElementById('error-confirm-pwd');
+
+        errCurrent.style.display = 'none';
+        errNew.style.display = 'none';
+        errConfirm.style.display = 'none';
+
+        const currentPassword = document.getElementById('input-current-pwd').value;
+        const newPassword = document.getElementById('input-new-pwd').value;
+        const confirmPassword = document.getElementById('input-confirm-pwd').value;
+
+        let hasError = false;
+
+        if (!currentPassword) {
+          errCurrent.textContent = 'Current password is required.';
+          errCurrent.style.display = 'block';
+          hasError = true;
+        }
+
+        if (!newPassword || newPassword.length < 6) {
+          errNew.textContent = 'New password must be at least 6 characters long.';
+          errNew.style.display = 'block';
+          hasError = true;
+        }
+
+        if (newPassword !== confirmPassword) {
+          errConfirm.textContent = 'Password confirmation does not match.';
+          errConfirm.style.display = 'block';
+          hasError = true;
+        }
+
+        if (hasError) return;
+
+        pwdBtn.disabled = true;
+        pwdBtn.innerHTML = '<span class="spinner spinner-sm"></span> Updating...';
+
+        try {
+          await window.api.put('/auth/change-password', {
+            current_password: currentPassword,
+            new_password: newPassword,
+            confirm_password: confirmPassword
+          });
+
+          window.toast.success('Your account password has been updated securely.', 'Password Changed');
+          pwdForm.reset();
+        } catch (err) {
+          window.toast.error(err.message || 'Failed to change password. Please check your current password.', 'Error');
+        } finally {
+          pwdBtn.disabled = false;
+          pwdBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Update Password</span>
+          `;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
